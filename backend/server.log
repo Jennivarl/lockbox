@@ -1,4 +1,0 @@
-INFO:     127.0.0.1:62085 - "GET /stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62085 - "GET /vaults HTTP/1.1" 200 OK
-INFO:     127.0.0.1:62085 - "GET /feed?limit=6 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54407 - "GET /leaderboard HTTP/1.1" 200 OK
