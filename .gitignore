@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+*.db
+*.log
+*.err
+backend/.env
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
