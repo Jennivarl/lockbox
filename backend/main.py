@@ -488,6 +488,23 @@ async def get_leaderboard(top: int = 20):
         await db.close()
 
 
+# ── admin ─────────────────────────────────────────────────────────────────
+
+@app.post("/admin/reseed")
+async def admin_reseed():
+    """Wipe all data and re-run seed. Use once to load fresh demo data."""
+    db = await get_db()
+    try:
+        for table in ("invites", "reactive_events", "members", "vaults", "peers"):
+            await db.execute(f"DELETE FROM {table}", ())
+        await db.commit()
+    finally:
+        await db.close()
+    from seed import seed
+    await seed()
+    return {"ok": True, "message": "Database wiped and reseeded with 16 vaults"}
+
+
 # ── peers ──────────────────────────────────────────────────────────────────
 
 @app.post("/peers", response_model=PeerOut)
