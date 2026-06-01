@@ -1,4 +1,4 @@
-import type { Vault, Peer, ReactiveEvent, ReactiveRule, Stats } from "./types";
+import type { Vault, Peer, ReactiveEvent, ReactiveRule, Stats, Invite } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001";
 
@@ -31,5 +31,9 @@ export const api = {
   trigger:  (id: string)  => post(`/vaults/${id}/trigger`),
   feed:     (limit = 50)  => get<ReactiveEvent[]>("/feed", { limit }),
   leaderboard: (top = 20) => get<Peer[]>("/leaderboard", { top }),
-  upsertPeer: (body: object) => post<Peer>("/peers", body),
+  upsertPeer:     (body: object)                   => post<Peer>("/peers", body),
+  requestJoin:    (id: string, body: object)       => post(`/vaults/${id}/requests`, body),
+  getRequests:    (id: string)                     => get<Invite[]>(`/vaults/${id}/requests`),
+  acceptRequest:  (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/accept`, body),
+  rejectRequest:  (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/reject`, body),
 };

@@ -12,6 +12,9 @@ from loguru import logger
 
 from database import get_db, init_db
 from models import (
+    InviteAction,
+    InviteCreate,
+    InviteOut,
     JoinRequest,
     MemberOut,
     PeerOut,
@@ -309,6 +312,127 @@ async def rage_quit(vault_id: str, body: QuitRequest):
         result = await on_rage_quit(db, vault, dict(row))
         await db.commit()
         return result
+    finally:
+        await db.close()
+
+
+# ── join requests ─────────────────────────────────────────────────────────
+
+@app.post("/vaults/{vault_id}/requests", status_code=201)
+async def request_join(vault_id: str, body: InviteCreate):
+    db = await get_db()
+    try:
+        vault = await _get_vault(db, vault_id)
+        if vault["status"] != "filling":
+            raise HTTPException(400, f"Vault is {vault['status']} — cannot request to join")
+        if body.peer_id == vault["creator_id"]:
+            raise HTTPException(400, "Vault creator can join directly")
+        async with db.execute(
+            "SELECT id FROM members WHERE vault_id=? AND peer_id=? AND status='active'",
+            (vault_id, body.peer_id),
+        ) as cur:
+            if await cur.fetchone():
+                raise HTTPException(400, "Already a member")
+        async with db.execute(
+            "SELECT id FROM invites WHERE vault_id=? AND peer_id=? AND status='pending'",
+            (vault_id, body.peer_id),
+        ) as cur:
+            if await cur.fetchone():
+                raise HTTPException(400, "Already have a pending request")
+        await _ensure_peer(db, body.peer_id, body.peer_name)
+        invite_id = _new_id()
+        await db.execute(
+            "INSERT INTO invites VALUES (?,?,?,?,?,?,?)",
+            (invite_id, vault_id, body.peer_id, body.peer_name, "pending", _now(), None),
+        )
+        await db.commit()
+        return {"ok": True, "invite_id": invite_id}
+    finally:
+        await db.close()
+
+
+@app.get("/vaults/{vault_id}/requests", response_model=list[InviteOut])
+async def get_requests(vault_id: str):
+    db = await get_db()
+    try:
+        await _get_vault(db, vault_id)
+        async with db.execute(
+            "SELECT * FROM invites WHERE vault_id=? AND status='pending' ORDER BY created_at DESC",
+            (vault_id,),
+        ) as cur:
+            return [dict(r) for r in await cur.fetchall()]
+    finally:
+        await db.close()
+
+
+@app.post("/vaults/{vault_id}/requests/{invite_id}/accept")
+async def accept_request(vault_id: str, invite_id: str, body: InviteAction):
+    db = await get_db()
+    try:
+        vault = await _get_vault(db, vault_id)
+        if body.creator_id != vault["creator_id"]:
+            raise HTTPException(403, "Only the vault creator can accept requests")
+        async with db.execute(
+            "SELECT * FROM invites WHERE id=? AND vault_id=? AND status='pending'",
+            (invite_id, vault_id),
+        ) as cur:
+            row = await cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Request not found or already resolved")
+        invite = dict(row)
+        if vault["status"] != "filling":
+            raise HTTPException(400, f"Vault is {vault['status']} — cannot add member")
+        async with db.execute(
+            "SELECT COUNT(*) AS n FROM members WHERE vault_id=? AND status='active'",
+            (vault_id,),
+        ) as cur:
+            if (await cur.fetchone())["n"] >= vault["max_members"]:
+                raise HTTPException(400, "Vault is full")
+        await db.execute(
+            "UPDATE invites SET status='accepted', resolved_at=? WHERE id=?",
+            (_now(), invite_id),
+        )
+        member_id = _new_id()
+        await db.execute(
+            "INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
+            (
+                member_id, vault_id, invite["peer_id"], invite["peer_name"],
+                vault["buy_in"], vault["buy_in"], _now(), None, "active",
+            ),
+        )
+        await db.execute(
+            "UPDATE vaults SET pot_total=pot_total+? WHERE id=?",
+            (vault["buy_in"], vault_id),
+        )
+        await db.commit()
+        vault = await _get_vault(db, vault_id)
+        member = {"peer_id": invite["peer_id"], "peer_name": invite["peer_name"], "id": member_id}
+        events = await on_member_joined(db, vault, member)
+        await db.commit()
+        return {"ok": True, "member_id": member_id, "events_fired": len(events)}
+    finally:
+        await db.close()
+
+
+@app.post("/vaults/{vault_id}/requests/{invite_id}/reject")
+async def reject_request(vault_id: str, invite_id: str, body: InviteAction):
+    db = await get_db()
+    try:
+        vault = await _get_vault(db, vault_id)
+        if body.creator_id != vault["creator_id"]:
+            raise HTTPException(403, "Only the vault creator can reject requests")
+        async with db.execute(
+            "SELECT * FROM invites WHERE id=? AND vault_id=? AND status='pending'",
+            (invite_id, vault_id),
+        ) as cur:
+            if not await cur.fetchone():
+                raise HTTPException(404, "Request not found or already resolved")
+        await db.execute(
+            "UPDATE invites SET status='rejected', resolved_at=? WHERE id=?",
+            (_now(), invite_id),
+        )
+        await db.commit()
+        return {"ok": True}
     finally:
         await db.close()
 

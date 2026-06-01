@@ -86,3 +86,22 @@ class StatsOut(BaseModel):
     total_rage_quits: int
     total_survivors: int
     total_peers: int
+
+
+class InviteCreate(BaseModel):
+    peer_id: str
+    peer_name: str
+
+
+class InviteAction(BaseModel):
+    creator_id: str
+
+
+class InviteOut(BaseModel):
+    id: str
+    vault_id: str
+    peer_id: str
+    peer_name: str
+    status: str
+    created_at: str
+    resolved_at: Optional[str]

@@ -63,3 +63,13 @@ export interface Stats {
   total_survivors: number;
   total_peers: number;
 }
+
+export interface Invite {
+  id: string;
+  vault_id: string;
+  peer_id: string;
+  peer_name: string;
+  status: "pending" | "accepted" | "rejected";
+  created_at: string;
+  resolved_at: string | null;
+}
