@@ -517,14 +517,14 @@ export default function VaultPage() {
               {canTrig && (
                 <button onClick={handleTrigger} title="Fast-forward deadline (demo only)"
                   style={{
-                    padding: "0 10px", height: 34, borderRadius: 8,
-                    fontFamily: font, fontSize: 10, letterSpacing: "0.08em",
-                    color: "#BBBBBB", background: "transparent",
-                    border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer",
-                    transition: "color 0.15s, border-color 0.15s",
+                    padding: "0 16px", height: 44, borderRadius: 10,
+                    fontFamily: font, fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
+                    color: "#444444", background: "rgba(0,0,0,0.06)",
+                    border: "1px solid rgba(0,0,0,0.18)", cursor: "pointer",
+                    transition: "background 0.15s, border-color 0.15s",
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#6B6B6B"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.2)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#BBBBBB"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.1)"; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.11)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.28)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.06)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.18)"; }}
                 >
                   demo
                 </button>
