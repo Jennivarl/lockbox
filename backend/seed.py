@@ -103,7 +103,7 @@ async def seed():
              "5 indie makers lock 600 RIAO each to commit to posting daily build updates "
              "for 90 days. Go silent and lose 20% to the builders who kept shipping.",
              "accountability", 600, 5, 20, 24, _from_now(days=90),
-             "filling", "peer-petra", "petra.eth", 1800, _ago(minutes=15)),
+             "filling", "peer-petra", "petra.eth", 1800, _ago(minutes=5)),
         )
         for pid, name, h in [
             ("peer-petra", "petra.eth", 10), ("peer-quinn", "quinn.eth", 7), ("peer-raj", "raj.eth", 3),
@@ -128,7 +128,7 @@ async def seed():
              "Hold your prediction until the final whistle — bottle it early and lose "
              "30% to those who kept the faith.",
              "accountability", 3000, 5, 30, 48, _from_now(days=47),
-             "filling", "peer-rialo", "Rialo DAO", 6000, _ago(minutes=30)),
+             "filling", "peer-rialo", "Rialo DAO", 6000, _ago(minutes=35)),
         )
         for pid, name, h in [
             ("peer-rialo", "Rialo DAO", 48), ("peer-raj", "raj.eth", 20),
@@ -178,7 +178,7 @@ async def seed():
              "5 friends commit to saving 2,500 RIAO each for the Bali trip. "
              "Bail early and lose 20% to everyone who stayed.",
              "savings", 2500, 5, 20, 48, _from_now(days=30),
-             "filling", "peer-alice", "alice.eth", 10000, _ago(days=2)),
+             "filling", "peer-alice", "alice.eth", 10000, _ago(minutes=20)),
         )
         for pid, name, h in [
             ("peer-alice", "alice.eth", 48), ("peer-bob", "bob.eth", 36),
@@ -256,7 +256,7 @@ async def seed():
              "3 co-founders lock 15,000 RIAO each as a public commitment to stay "
              "for 12 months. Walk early and lose 30% to your co-founders.",
              "vesting", 15000, 3, 30, 0, _from_now(days=365),
-             "filling", "peer-henry", "henry.eth", 15000, _ago(hours=2)),
+             "filling", "peer-henry", "henry.eth", 15000, _ago(hours=1, minutes=20)),
         )
         await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
             (_id(), v8, "peer-henry", "henry.eth", 15000, 15000, _ago(hours=2), None, "active"))
@@ -324,7 +324,7 @@ async def seed():
              "6 core contributors lock 8,000 RIAO each to signal conviction on the v2 "
              "mainnet launch. Anyone who bails before mainnet loses 25% to the team.",
              "dao", 8000, 6, 25, 72, _from_now(days=60),
-             "filling", "peer-rialo", "Rialo DAO", 24000, _ago(days=3)),
+             "filling", "peer-rialo", "Rialo DAO", 24000, _ago(minutes=50)),
         )
         for pid, name, h in [
             ("peer-rialo", "Rialo DAO", 72), ("peer-alice", "alice.eth", 48), ("peer-bob", "bob.eth", 24),
@@ -396,7 +396,7 @@ async def seed():
              "4 content creators lock 1,200 RIAO each to commit to shipping 10 "
              "episodes of their show. Go dark before it's done and lose 25% to your co-hosts.",
              "accountability", 1200, 4, 25, 24, _from_now(days=60),
-             "filling", "peer-sara", "sara.eth", 2400, _ago(hours=5)),
+             "filling", "peer-sara", "sara.eth", 2400, _ago(hours=1, minutes=5)),
         )
         for pid, name, h in [("peer-sara", "sara.eth", 5), ("peer-petra", "petra.eth", 2)]:
             await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
@@ -437,7 +437,7 @@ async def seed():
              "4 builders lock 800 RIAO each to ship a working product in 21 days. "
              "No excuses. Quit and lose 30% to the builders who shipped.",
              "accountability", 800, 4, 30, 24, _from_now(days=21),
-             "filling", "peer-kai", "kai.eth", 1600, _ago(hours=6)),
+             "filling", "peer-kai", "kai.eth", 1600, _ago(hours=1, minutes=35)),
         )
         for pid, name, h in [("peer-kai", "kai.eth", 6), ("peer-luna", "luna.eth", 3)]:
             await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
