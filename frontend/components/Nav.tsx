@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Vault, Plus, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
+import { useBalance } from "@/lib/useBalance";
 
 const font = '"Space Mono", "Courier New", monospace';
 
@@ -10,6 +11,7 @@ export default function Nav() {
   const path = usePathname();
   const isActive = (href: string) => href !== "/" ? path.startsWith(href) : path === href;
   const { ready, authenticated, login, logout, peerName } = useAuth();
+  const { balance } = useBalance();
 
   return (
     <nav style={{
@@ -54,7 +56,7 @@ export default function Nav() {
                 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />
                   <span style={{ fontFamily: font, fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.04em" }}>
-                    50,000 RIAO
+                    {balance.toLocaleString()} RIAO
                   </span>
                 </div>
               </div>

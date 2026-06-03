@@ -11,6 +11,7 @@ import { Avatar } from "@/components/Avatar";
 import { ProgressBar } from "@/components/ProgressBar";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
+import { useBalance } from "@/lib/useBalance";
 import type { Vault, Member, ReactiveEvent, Invite } from "@/lib/types";
 
 const font = '"Space Mono", "Courier New", monospace';
@@ -142,17 +143,112 @@ function RequestRow({ invite, onAccept, onReject, accentColor }: {
   );
 }
 
+function LockInModal({ vault, balance, onConfirm, onCancel, accentColor }: {
+  vault: Vault; balance: number; onConfirm: () => void; onCancel: () => void; accentColor: string;
+}) {
+  const after = balance - vault.buy_in;
+  const insufficient = balance < vault.buy_in;
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: "rgba(0,0,0,0.45)", backdropFilter: "blur(4px)",
+    }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}
+        style={{
+          background: "#FFFFFF", borderRadius: 18, padding: "32px 32px 28px",
+          width: 420, boxShadow: "0 24px 60px rgba(0,0,0,0.2)",
+          border: `2px solid ${accentColor}30`,
+        }}>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 11, background: `${accentColor}12`,
+            border: `1px solid ${accentColor}30`,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <Lock style={{ width: 19, height: 19, color: accentColor }} strokeWidth={1.8} />
+          </div>
+          <div>
+            <div style={{ fontFamily: font, fontSize: 15, fontWeight: 900, color: "#000000", letterSpacing: "-0.01em" }}>
+              Lock into vault
+            </div>
+            <div style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B", marginTop: 2 }}>
+              {vault.name}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderRadius: 12, background: "#EDF0F5", border: "1px solid rgba(0,0,0,0.08)", padding: "18px 20px", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>Amount to lock</span>
+            <span style={{ fontFamily: font, fontSize: 18, fontWeight: 900, color: accentColor, letterSpacing: "-0.02em" }}>
+              {vault.buy_in.toLocaleString()} RIAO
+            </span>
+          </div>
+          <div style={{ height: 1, background: "rgba(0,0,0,0.07)", marginBottom: 12 }} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>Your balance</span>
+            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 700, color: "#000000" }}>
+              {balance.toLocaleString()} RIAO
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>After locking</span>
+            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 700, color: insufficient ? "#DC2626" : "#059669" }}>
+              {after.toLocaleString()} RIAO
+            </span>
+          </div>
+        </div>
+
+        {insufficient && (
+          <div style={{ borderRadius: 8, padding: "10px 14px", marginBottom: 16,
+            background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)",
+            fontFamily: font, fontSize: 12, color: "#DC2626" }}>
+            Insufficient balance — you need {vault.buy_in.toLocaleString()} RIAO to join.
+          </div>
+        )}
+
+        <div style={{ fontFamily: font, fontSize: 11, color: "#9B9B9B", marginBottom: 20, lineHeight: 1.6 }}>
+          Quit before deadline? You forfeit <strong style={{ color: "#DC2626" }}>{vault.penalty_pct}%</strong> ({Math.round(vault.buy_in * vault.penalty_pct / 100).toLocaleString()} RIAO) to survivors.
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onCancel} style={{
+            flex: 1, padding: "12px 0", borderRadius: 10,
+            fontFamily: font, fontSize: 13, fontWeight: 700, letterSpacing: "0.04em",
+            background: "transparent", color: "#6B6B6B",
+            border: "1px solid rgba(0,0,0,0.15)", cursor: "pointer",
+          }}>
+            Cancel
+          </button>
+          <button onClick={onConfirm} disabled={insufficient} style={{
+            flex: 2, padding: "12px 0", borderRadius: 10,
+            fontFamily: font, fontSize: 13, fontWeight: 700, letterSpacing: "0.04em",
+            background: insufficient ? "#CCCCCC" : accentColor, color: "#FFFFFF",
+            border: "none", cursor: insufficient ? "not-allowed" : "pointer",
+          }}>
+            Lock In — {vault.buy_in.toLocaleString()} RIAO
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function VaultPage() {
   const { id }    = useParams<{ id: string }>();
   const router    = useRouter();
   const { authenticated, login, peerId, peerName } = useAuth();
+  const { balance, deduct, add } = useBalance();
 
-  const [vault,    setVault]    = useState<Vault | null>(null);
-  const [events,   setEvents]   = useState<ReactiveEvent[]>([]);
-  const [requests, setRequests] = useState<Invite[]>([]);
-  const [newIds,   setNewIds]   = useState<Set<string>>(new Set());
-  const [flash,    setFlash]    = useState("");
-  const [quitMsg,  setQuitMsg]  = useState("");
+  const [vault,       setVault]       = useState<Vault | null>(null);
+  const [events,      setEvents]      = useState<ReactiveEvent[]>([]);
+  const [requests,    setRequests]    = useState<Invite[]>([]);
+  const [newIds,      setNewIds]      = useState<Set<string>>(new Set());
+  const [flash,       setFlash]       = useState("");
+  const [quitMsg,     setQuitMsg]     = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const prevIds = useRef<Set<string>>(new Set());
 
   const load = async () => {
@@ -206,22 +302,23 @@ export default function VaultPage() {
   const canQuit    = (vault.status === "filling" || vault.status === "active") && isMember;
   const canTrig    = vault.status === "filling" || vault.status === "active";
 
-  const handleJoin = async () => {
+  const handleJoin = () => {
     if (!authenticated) { login(); return; }
-    try {
-      const r = await api.join(id, { peer_id: peerId, peer_name: peerName }) as { events_fired: number };
-      setFlash(`Joined! ${r.events_fired} rule(s) fired.`);
-      setTimeout(() => setFlash(""), 3000);
-      load();
-    } catch (e) { setFlash((e as Error).message); setTimeout(() => setFlash(""), 4000); }
+    setShowConfirm(true);
   };
 
-  const handleRequest = async () => {
+  const handleRequest = () => {
     if (!authenticated) { login(); return; }
+    setShowConfirm(true);
+  };
+
+  const handleConfirmJoin = async () => {
+    if (!vault) return;
+    setShowConfirm(false);
     try {
-      setFlash("Request accepted — locking you in…");
       const r = await api.join(id, { peer_id: peerId, peer_name: peerName }) as { events_fired: number };
-      setFlash(`You're in! ${r.events_fired} rule(s) fired.`);
+      deduct(vault.buy_in);
+      setFlash(`Locked in! ${r.events_fired} rule(s) fired.`);
       setTimeout(() => setFlash(""), 3000);
       load();
     } catch (e) { setFlash((e as Error).message); setTimeout(() => setFlash(""), 4000); }
@@ -234,6 +331,7 @@ export default function VaultPage() {
       if (!r.ok && r.reason === "too_early") {
         setQuitMsg(`Too early — ${r.hours_remaining}h remaining in lock period.`);
       } else if (r.ok) {
+        add(r.refund);
         setQuitMsg(`You quit. Lost ${r.penalty.toLocaleString()} RIAO, got ${r.refund.toLocaleString()} RIAO back.`);
       }
       setTimeout(() => setQuitMsg(""), 5000);
@@ -268,6 +366,15 @@ export default function VaultPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#C2C8D4" }}>
+      {showConfirm && vault && (
+        <LockInModal
+          vault={vault}
+          balance={balance}
+          accentColor={meta.color}
+          onConfirm={handleConfirmJoin}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
       <Nav />
       <div style={{ maxWidth: 1060, margin: "0 auto", padding: "36px 32px" }}>
 
