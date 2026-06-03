@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock } from "lucide-react";
+import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -525,7 +525,8 @@ export default function VaultPage() {
               {canTrig && (
                 <button onClick={handleTrigger} title="Fast-forward deadline (demo only)"
                   style={{
-                    padding: "0 16px", height: 44, borderRadius: 10,
+                    width: 44, height: 44, borderRadius: 10,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
                     fontFamily: font, fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
                     color: "#444444", background: "rgba(0,0,0,0.06)",
                     border: "1px solid rgba(0,0,0,0.18)", cursor: "pointer",
@@ -534,7 +535,7 @@ export default function VaultPage() {
                   onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.11)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.28)"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.06)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.18)"; }}
                 >
-                  demo
+                  <FastForward style={{ width: 15, height: 15 }} />
                 </button>
               )}
             </div>
