@@ -452,7 +452,15 @@ export default function VaultPage() {
                 <MemberRow key={m.id} m={m} canQuit={canQuit} onQuit={handleQuit} peerId={peerId} accentColor={meta.color} />
               ))}
               {Array.from({ length: vault.max_members - vault.members.length }).map((_, i) => (
-                <div key={i} style={{ padding: "12px 16px", borderRadius: 10, marginBottom: 8, border: "1px dashed rgba(0,0,0,0.12)", fontFamily: font, fontSize: 13, color: "#BBBBBB", fontStyle: "italic" }}>
+                <div key={i} style={{
+                  padding: "14px 16px", borderRadius: 10, marginBottom: 8,
+                  border: "1.5px dashed rgba(0,0,0,0.25)",
+                  background: "rgba(255,255,255,0.5)",
+                  fontFamily: font, fontSize: 13, fontWeight: 600,
+                  color: "#6B6B6B", fontStyle: "italic",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, border: "1.5px dashed rgba(0,0,0,0.2)", background: "rgba(0,0,0,0.04)" }} />
                   open slot
                 </div>
               ))}
