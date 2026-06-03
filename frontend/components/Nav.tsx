@@ -45,7 +45,7 @@ export default function Nav() {
 
           {ready && authenticated ? (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
                 <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
                   {peerName}
                 </span>
@@ -59,7 +59,7 @@ export default function Nav() {
                     {balance.toLocaleString()} RIAO
                   </span>
                 </div>
-              </div>
+              </Link>
               <Link href="/vaults/new" style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,

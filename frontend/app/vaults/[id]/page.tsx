@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, Zap, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock } from "lucide-react";
+import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -512,9 +512,19 @@ export default function VaultPage() {
                 </button>
               )}
               {canTrig && (
-                <Button variant="secondary" size="lg" onClick={handleTrigger}>
-                  <Zap style={{ width: 15, height: 15 }} /> Trigger Deadline
-                </Button>
+                <button onClick={handleTrigger} title="Fast-forward deadline (demo only)"
+                  style={{
+                    padding: "0 10px", height: 34, borderRadius: 8,
+                    fontFamily: font, fontSize: 10, letterSpacing: "0.08em",
+                    color: "#BBBBBB", background: "transparent",
+                    border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer",
+                    transition: "color 0.15s, border-color 0.15s",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#6B6B6B"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.2)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#BBBBBB"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(0,0,0,0.1)"; }}
+                >
+                  demo
+                </button>
               )}
             </div>
           </div>
