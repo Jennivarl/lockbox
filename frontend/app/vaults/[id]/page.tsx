@@ -12,6 +12,7 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { useBalance } from "@/lib/useBalance";
+import { useProfile } from "@/lib/useProfile";
 import type { Vault, Member, ReactiveEvent, Invite } from "@/lib/types";
 
 const font = '"Space Mono", "Courier New", monospace';
@@ -241,6 +242,8 @@ export default function VaultPage() {
   const router    = useRouter();
   const { authenticated, login, peerId, peerName } = useAuth();
   const { balance, deduct, add } = useBalance();
+  const { profile } = useProfile();
+  const displayName = profile.displayName || peerName;
 
   const [vault,       setVault]       = useState<Vault | null>(null);
   const [events,      setEvents]      = useState<ReactiveEvent[]>([]);
@@ -316,7 +319,7 @@ export default function VaultPage() {
     if (!vault) return;
     setShowConfirm(false);
     try {
-      const r = await api.join(id, { peer_id: peerId, peer_name: peerName }) as { events_fired: number };
+      const r = await api.join(id, { peer_id: peerId, peer_name: displayName }) as { events_fired: number };
       deduct(vault.buy_in);
       setFlash(`Locked in! ${r.events_fired} rule(s) fired.`);
       setTimeout(() => setFlash(""), 3000);

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Vault, Plus, LogOut, LogIn } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { useBalance } from "@/lib/useBalance";
+import { useProfile } from "@/lib/useProfile";
 
 const font = '"Space Mono", "Courier New", monospace';
 
@@ -12,6 +13,8 @@ export default function Nav() {
   const isActive = (href: string) => href !== "/" ? path.startsWith(href) : path === href;
   const { ready, authenticated, login, logout, peerName } = useAuth();
   const { balance } = useBalance();
+  const { profile } = useProfile();
+  const displayName = profile.displayName || peerName;
 
   return (
     <nav style={{
@@ -47,7 +50,7 @@ export default function Nav() {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
                 <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
-                  {peerName}
+                  {displayName}
                 </span>
                 <div style={{
                   display: "inline-flex", alignItems: "center", gap: 5,
