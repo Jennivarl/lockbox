@@ -43,9 +43,21 @@ export default function Nav() {
 
           {ready && authenticated ? (
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
-                {peerName}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
+                  {peerName}
+                </span>
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "4px 10px", borderRadius: 20,
+                  background: "rgba(5,150,105,0.1)", border: "1px solid rgba(5,150,105,0.25)",
+                }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#059669" }} />
+                  <span style={{ fontFamily: font, fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.04em" }}>
+                    50,000 RIAO
+                  </span>
+                </div>
+              </div>
               <Link href="/vaults/new" style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,

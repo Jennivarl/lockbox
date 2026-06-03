@@ -219,9 +219,11 @@ export default function VaultPage() {
   const handleRequest = async () => {
     if (!authenticated) { login(); return; }
     try {
-      await api.requestJoin(id, { peer_id: peerId, peer_name: peerName });
-      setFlash("Request sent — waiting for the vault creator to accept.");
-      setTimeout(() => setFlash(""), 5000);
+      setFlash("Request accepted — locking you in…");
+      const r = await api.join(id, { peer_id: peerId, peer_name: peerName }) as { events_fired: number };
+      setFlash(`You're in! ${r.events_fired} rule(s) fired.`);
+      setTimeout(() => setFlash(""), 3000);
+      load();
     } catch (e) { setFlash((e as Error).message); setTimeout(() => setFlash(""), 4000); }
   };
 
