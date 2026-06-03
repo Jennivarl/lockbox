@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward } from "lucide-react";
+import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -28,10 +28,18 @@ const EVENT_COLOR: Record<string, string> = {
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   savings:        { icon: PiggyBank, color: "#059669", bg: "rgba(5,150,105,0.07)"  },
-  accountability: { icon: Dumbbell,  color: "#7C3AED", bg: "rgba(124,58,237,0.07)" },
+  accountability: { icon: Target,    color: "#7C3AED", bg: "rgba(124,58,237,0.07)" },
   dao:            { icon: Building2, color: "#2563EB", bg: "rgba(37,99,235,0.07)"  },
   vesting:        { icon: Lock,      color: "#D97706", bg: "rgba(217,119,6,0.07)"  },
 };
+
+function getVaultIcon(name: string, type: string): React.ElementType {
+  if (type !== "accountability") return TYPE_META[type]?.icon ?? Lock;
+  const n = name.toLowerCase();
+  if (/world cup|cup final|prediction pact|soccer|football/.test(n)) return Trophy;
+  if (/gym|run|workout|fitness|sport|push.?up/.test(n)) return Dumbbell;
+  return Target;
+}
 
 function timeLeft(deadline: string) {
   const ms = new Date(deadline).getTime() - Date.now();
@@ -295,7 +303,7 @@ export default function VaultPage() {
   );
 
   const meta       = TYPE_META[vault.type] ?? TYPE_META.vesting;
-  const TypeIcon   = meta.icon;
+  const TypeIcon   = getVaultIcon(vault.name, vault.type);
   const active     = vault.members.filter(m => m.status === "active");
   const progress   = Math.round((active.length / vault.max_members) * 100);
   const isMember   = vault.members.some(m => m.peer_id === peerId && m.status === "active");

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Timer, Users, Plus, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft } from "lucide-react";
+import { Timer, Users, Plus, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -19,10 +19,18 @@ const STATUS_VARIANT: Record<string, "info" | "success" | "default" | "danger"> 
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   savings:        { icon: PiggyBank, color: "#059669", bg: "rgba(5,150,105,0.08)",   label: "Savings" },
-  accountability: { icon: Dumbbell,  color: "#7C3AED", bg: "rgba(124,58,237,0.08)",  label: "Accountability" },
+  accountability: { icon: Target,    color: "#7C3AED", bg: "rgba(124,58,237,0.08)",  label: "Accountability" },
   dao:            { icon: Building2, color: "#2563EB", bg: "rgba(37,99,235,0.08)",   label: "DAO" },
   vesting:        { icon: Lock,      color: "#D97706", bg: "rgba(217,119,6,0.08)",   label: "Vesting" },
 };
+
+function getVaultIcon(name: string, type: string): React.ElementType {
+  if (type !== "accountability") return TYPE_META[type]?.icon ?? Lock;
+  const n = name.toLowerCase();
+  if (/world cup|cup final|prediction pact|soccer|football/.test(n)) return Trophy;
+  if (/gym|run|workout|fitness|sport|push.?up/.test(n)) return Dumbbell;
+  return Target;
+}
 
 function timeLeft(deadline: string) {
   const ms = new Date(deadline).getTime() - Date.now();
@@ -38,7 +46,7 @@ function VaultCard({ v, index }: { v: Vault; index: number }) {
   const quits    = v.members.filter(m => m.status === "quit");
   const progress = Math.round((active.length / v.max_members) * 100);
   const meta     = TYPE_META[v.type] ?? TYPE_META.vesting;
-  const TypeIcon = meta.icon;
+  const TypeIcon = getVaultIcon(v.name, v.type);
 
   return (
     <Link href={`/vaults/${v.id}`} style={{ textDecoration: "none" }}>
