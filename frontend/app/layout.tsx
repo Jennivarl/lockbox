@@ -1,33 +1,32 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { PrivyProvider } from "@/components/PrivyProvider";
 
 export const metadata: Metadata = {
-  title: "RageVault — Lock in. Hold the line. Get paid.",
-  description: "Commit with your group. Rage quit early and lose 20% to those who stayed.",
+  title: "Lockbox — Lock in. Hold the line. Get paid.",
+  description: "Commit funds with your group. Rage quit early and lose your penalty to those who stayed. Built on Rialo.",
+  metadataBase: new URL("https://lockbox-vault.vercel.app"),
+  openGraph: {
+    title: "Lockbox — Lock in. Hold the line. Get paid.",
+    description: "Commit funds with your group. Rage quit early and lose your penalty to those who stayed. Built on Rialo.",
+    url: "https://lockbox-vault.vercel.app",
+    siteName: "Lockbox",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lockbox — Lock in. Hold the line. Get paid.",
+    description: "Commit funds with your group. Rage quit early and lose your penalty to those who stayed. Built on Rialo.",
+    creator: "@varl999",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body>
+        <PrivyProvider>{children}</PrivyProvider>
+      </body>
     </html>
   );
 }

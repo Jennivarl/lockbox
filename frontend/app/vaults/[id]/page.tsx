@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { ArrowLeft, Zap, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock } from "lucide-react";
@@ -268,13 +269,20 @@ export default function VaultPage() {
       <Nav />
       <div style={{ maxWidth: 1060, margin: "0 auto", padding: "36px 32px" }}>
 
-        <button onClick={() => router.back()} style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          fontFamily: font, fontSize: 13, color: "#6B6B6B",
-          background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 24,
-        }}>
-          <ArrowLeft style={{ width: 15, height: 15 }} /> All Vaults
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 24 }}>
+          <button onClick={() => router.back()} style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontFamily: font, fontSize: 13, color: "#6B6B6B",
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+          }}>
+            <ArrowLeft style={{ width: 15, height: 15 }} /> All Vaults
+          </button>
+          <Link href="/" style={{
+            fontFamily: font, fontSize: 13, color: "#6B6B6B", textDecoration: "none",
+          }}>
+            Home
+          </Link>
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 28 }}>
           {/* LEFT */}

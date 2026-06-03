@@ -65,9 +65,9 @@ async def _log_event(
         "fired_at": _now(),
     }
     await db.execute(
-        "INSERT INTO reactive_events VALUES "
-        "(:id,:rule_name,:event_type,:summary,:payload,:fired_at)",
-        event,
+        "INSERT INTO reactive_events VALUES (?,?,?,?,?,?)",
+        (event["id"], event["rule_name"], event["event_type"],
+         event["summary"], event["payload"], event["fired_at"]),
     )
     logger.info(f"[Rule] {rule_name} → {summary}")
     return event

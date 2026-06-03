@@ -1,61 +1,93 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Vault, Plus, LogOut, LogIn } from "lucide-react";
+import { useAuth } from "@/lib/useAuth";
 
-const LINKS = [
-  { href: "/vaults",      label: "Vaults" },
-  { href: "/leaderboard", label: "Leaderboard" },
-];
+const font = '"Space Mono", "Courier New", monospace';
 
 export default function Nav() {
   const path = usePathname();
+  const isActive = (href: string) => href !== "/" ? path.startsWith(href) : path === href;
+  const { ready, authenticated, login, logout, peerName } = useAuth();
+
   return (
     <nav style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "16px 40px",
-      borderBottom: "1px solid rgba(239,68,68,0.1)",
-      background: "rgba(6,4,10,0.95)",
       position: "sticky", top: 0, zIndex: 50,
-      backdropFilter: "blur(12px)",
+      background: "rgba(194,200,212,0.97)",
+      borderBottom: "1px solid rgba(0,0,0,0.1)",
+      backdropFilter: "blur(20px)",
     }}>
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: 8,
-          background: "linear-gradient(135deg, #ef4444, #dc2626)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 16,
-        }}>
-          🔒
-        </div>
-        <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.02em", color: "#f0eaf8" }}>
-          RageVault
-        </span>
-      </Link>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 
-      <div style={{ display: "flex", gap: 4 }}>
-        {LINKS.map(l => {
-          const active = path.startsWith(l.href);
-          return (
-            <Link key={l.href} href={l.href} style={{
-              padding: "7px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500,
-              color: active ? "#fca5a5" : "#7a6080",
-              background: active ? "rgba(239,68,68,0.1)" : "transparent",
-              border: active ? "1px solid rgba(239,68,68,0.2)" : "1px solid transparent",
-              transition: "all 150ms",
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Vault style={{ width: 20, height: 20, color: "#FFFFFF" }} strokeWidth={1.8} />
+          </div>
+          <span style={{ fontFamily: font, fontSize: 19, fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "#000000" }}>
+            Lockbox
+          </span>
+        </Link>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          {[{ href: "/vaults", label: "Vaults" }, { href: "/leaderboard", label: "Leaderboard" }].map(({ href, label }) => (
+            <Link key={href} href={href} style={{
+              fontFamily: font, fontSize: 14, fontWeight: 600, letterSpacing: "0.04em",
+              color: isActive(href) ? "#000000" : "#222222",
+              borderBottom: isActive(href) ? "2px solid #000000" : "2px solid transparent",
+              paddingBottom: 2, transition: "all 0.15s",
             }}>
-              {l.label}
+              {label}
             </Link>
-          );
-        })}
-      </div>
+          ))}
 
-      <Link href="/vaults/new" style={{
-        padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-        background: "linear-gradient(135deg, #ef4444, #dc2626)",
-        color: "#fff",
-      }}>
-        + New Vault
-      </Link>
+          {ready && authenticated ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
+                {peerName}
+              </span>
+              <Link href="/vaults/new" style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: "#000000", color: "#FFFFFF", textDecoration: "none",
+              }}>
+                <Plus style={{ width: 14, height: 14 }} /> New Vault
+              </Link>
+              <button onClick={logout} style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 14px", borderRadius: 8, fontSize: 12,
+                fontFamily: font, cursor: "pointer",
+                background: "transparent", color: "#6B6B6B",
+                border: "1px solid rgba(0,0,0,0.15)",
+              }}>
+                <LogOut style={{ width: 13, height: 13 }} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={login} style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: "transparent", color: "#000000",
+                border: "1px solid rgba(0,0,0,0.3)", cursor: "pointer",
+              }}>
+                <LogIn style={{ width: 14, height: 14 }} /> Sign In
+              </button>
+              <button onClick={login} style={{
+                display: "inline-flex", alignItems: "center", gap: 6,
+                padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: "#000000", color: "#FFFFFF",
+                border: "1px solid #000000", cursor: "pointer",
+              }}>
+                <Plus style={{ width: 14, height: 14 }} /> New Vault
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }
