@@ -52,12 +52,12 @@ export default function ProfilePage() {
   const [vaults, setVaults] = useState<Vault[]>([]);
 
   useEffect(() => {
-    if (loaded) {
-      setDisplayName(profile.displayName || peerName);
-      setBio(profile.bio);
-      setAvatarColor(profile.avatarColor);
-    }
-  }, [loaded, peerName]);
+    if (!loaded) return;
+    setDisplayName(profile.displayName || peerName);
+    setBio(profile.bio);
+    setAvatarColor(profile.avatarColor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]); // intentionally only on mount — peerName changes must not overwrite edits
 
   useEffect(() => {
     api.vaults().then((vs: Vault[]) => setVaults(vs)).catch(() => {});
@@ -79,7 +79,6 @@ export default function ProfilePage() {
   const handleSave = () => {
     save({ displayName, bio, avatarColor });
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
   };
 
   const label = displayName || peerName;
@@ -153,7 +152,7 @@ export default function ProfilePage() {
                 </label>
                 <input
                   value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
+                  onChange={e => { setDisplayName(e.target.value); setSaved(false); }}
                   placeholder={peerName}
                   maxLength={40}
                   style={{
@@ -171,7 +170,7 @@ export default function ProfilePage() {
                 </label>
                 <textarea
                   value={bio}
-                  onChange={e => setBio(e.target.value.slice(0, 120))}
+                  onChange={e => { setBio(e.target.value.slice(0, 120)); setSaved(false); }}
                   placeholder="DeFi builder. Locking in since 2024."
                   rows={3}
                   style={{
@@ -190,7 +189,7 @@ export default function ProfilePage() {
                 </label>
                 <div style={{ display: "flex", gap: 8 }}>
                   {AVATAR_COLORS.map(c => (
-                    <button key={c} onClick={() => setAvatarColor(c)} style={{
+                    <button key={c} onClick={() => { setAvatarColor(c); setSaved(false); }} style={{
                       width: 34, height: 34, borderRadius: 9, background: c,
                       border: avatarColor === c ? "3px solid #000000" : "3px solid transparent",
                       outline: avatarColor === c ? "2px solid rgba(0,0,0,0.15)" : "none",
