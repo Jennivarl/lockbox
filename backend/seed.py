@@ -103,7 +103,7 @@ async def seed():
              "5 indie makers lock 600 RIAO each to commit to posting daily build updates "
              "for 90 days. Go silent and lose 20% to the builders who kept shipping.",
              "accountability", 600, 5, 20, 24, _from_now(days=90),
-             "filling", "peer-petra", "petra.eth", 1800, _ago(hours=10)),
+             "filling", "peer-petra", "petra.eth", 1800, _ago(minutes=15)),
         )
         for pid, name, h in [
             ("peer-petra", "petra.eth", 10), ("peer-quinn", "quinn.eth", 7), ("peer-raj", "raj.eth", 3),
@@ -128,7 +128,7 @@ async def seed():
              "Hold your prediction until the final whistle — bottle it early and lose "
              "30% to those who kept the faith.",
              "accountability", 3000, 5, 30, 48, _from_now(days=47),
-             "filling", "peer-rialo", "Rialo DAO", 6000, _ago(days=2)),
+             "filling", "peer-rialo", "Rialo DAO", 6000, _ago(minutes=30)),
         )
         for pid, name, h in [
             ("peer-rialo", "Rialo DAO", 48), ("peer-raj", "raj.eth", 20),
