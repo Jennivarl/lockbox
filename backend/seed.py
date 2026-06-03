@@ -118,26 +118,27 @@ async def seed():
             {"vault_id": v2, "pot_total": 1800}, _ago(hours=3))
 
         # ══════════════════════════════════════════════════════════════════════
-        # 3. DAO / filling — FIFA x Rialo Hackathon Fund
+        # 3. ACCOUNTABILITY / filling — World Cup Final Prediction Pact
         # ══════════════════════════════════════════════════════════════════════
         v3 = _id()
         await db.execute(
             "INSERT INTO vaults VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (v3, "FIFA x Rialo Hackathon Fund",
-             "5 builder teams lock 5,000 RIAO each as commitment to ship a working "
-             "product for the FIFA x Rialo hackathon. Quit before demo day and lose 30%.",
-             "dao", 5000, 5, 30, 72, _from_now(days=14),
-             "filling", "peer-rialo", "Rialo DAO", 10000, _ago(days=2)),
+            (v3, "World Cup Final Prediction Pact",
+             "5 football fanatics each lock 3,000 RIAO on their World Cup final pick. "
+             "Hold your prediction until the final whistle — bottle it early and lose "
+             "30% to those who kept the faith.",
+             "accountability", 3000, 5, 30, 48, _from_now(days=47),
+             "filling", "peer-rialo", "Rialo DAO", 6000, _ago(days=2)),
         )
         for pid, name, h in [
-            ("peer-rialo", "Rialo DAO", 48), ("peer-raj", "raj.eth", 24),
+            ("peer-rialo", "Rialo DAO", 48), ("peer-raj", "raj.eth", 20),
         ]:
             await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
-                (_id(), v3, pid, name, 5000, 5000, _ago(hours=h), None, "active"))
-        await _evt(db, "member_joined", "notification", 'Rialo DAO joined "FIFA x Rialo Hackathon Fund"',
-            {"vault_id": v3, "pot_total": 5000}, _ago(hours=48))
-        await _evt(db, "member_joined", "notification", 'raj.eth joined "FIFA x Rialo Hackathon Fund"',
-            {"vault_id": v3, "pot_total": 10000}, _ago(hours=24))
+                (_id(), v3, pid, name, 3000, 3000, _ago(hours=h), None, "active"))
+        await _evt(db, "member_joined", "notification", 'Rialo DAO joined "World Cup Final Prediction Pact"',
+            {"vault_id": v3, "pot_total": 3000}, _ago(hours=48))
+        await _evt(db, "member_joined", "notification", 'raj.eth joined "World Cup Final Prediction Pact"',
+            {"vault_id": v3, "pot_total": 6000}, _ago(hours=20))
 
         # ══════════════════════════════════════════════════════════════════════
         # 4. VESTING / active — Angel Syndicate Lock
