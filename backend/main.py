@@ -593,15 +593,19 @@ async def get_notifications(peer_id: str, limit: int = 30):
             vault_ids = [r["vault_id"] for r in await cur.fetchall()]
         if not vault_ids:
             return []
-        placeholders = ",".join("?" * len(vault_ids))
+        vault_id_set = set(vault_ids)
+        # Fetch recent events and filter in Python — avoids DB-specific JSON functions
         async with db.execute(
-            f"SELECT * FROM reactive_events WHERE json_extract(payload,'$.vault_id') IN ({placeholders}) "
-            f"ORDER BY fired_at DESC LIMIT ?",
-            (*vault_ids, limit),
+            "SELECT * FROM reactive_events ORDER BY fired_at DESC LIMIT ?", (limit * 5,)
         ) as cur:
             rows = [dict(r) for r in await cur.fetchall()]
+        result = []
         for r in rows:
             r["payload"] = json.loads(r["payload"])
-        return rows
+            if r["payload"].get("vault_id") in vault_id_set:
+                result.append(r)
+            if len(result) >= limit:
+                break
+        return result
     finally:
         await db.close()
