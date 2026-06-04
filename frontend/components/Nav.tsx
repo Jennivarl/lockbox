@@ -35,7 +35,7 @@ export default function Nav() {
         </Link>
 
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          {[{ href: "/vaults", label: "Vaults" }, { href: "/leaderboard", label: "Leaderboard" }].map(({ href, label }) => (
+          {[{ href: "/vaults", label: "Vaults" }, { href: "/leaderboard", label: "Leaderboard" }, { href: "/docs", label: "Docs" }].map(({ href, label }) => (
             <Link key={href} href={href} style={{
               fontFamily: font, fontSize: 14, fontWeight: 600, letterSpacing: "0.04em",
               color: isActive(href) ? "#000000" : "#222222",
