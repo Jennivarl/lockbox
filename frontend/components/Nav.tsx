@@ -8,6 +8,20 @@ import { useBalance } from "@/lib/useBalance";
 import { useProfile } from "@/lib/useProfile";
 
 const font = '"Space Mono", "Courier New", monospace';
+function NavAvatar({ name, color }: { name: string; color: string }) {
+  const initials = name.split(/[\s@._\-]+/).map(w => w[0]?.toUpperCase() ?? "").slice(0, 2).join("") || "?";
+  return (
+    <div style={{
+      width: 34, height: 34, borderRadius: 9, background: color || "#059669",
+      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+    }}>
+      <span style={{ fontFamily: font, fontSize: 12, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.01em" }}>
+        {initials}
+      </span>
+    </div>
+  );
+}
+
 const NAV_LINKS = [
   { href: "/vaults",      label: "Vaults" },
   { href: "/leaderboard", label: "Leaderboard" },
@@ -72,9 +86,7 @@ export default function Nav() {
               {ready && authenticated ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-                    <span style={{ fontFamily: font, fontSize: 12, color: "#444444", letterSpacing: "0.02em" }}>
-                      {displayName}
-                    </span>
+                    <NavAvatar name={displayName} color={profile.avatarColor} />
                   </Link>
                   <Link href="/vaults/new" style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
@@ -164,11 +176,13 @@ export default function Nav() {
             {ready && authenticated ? (
               <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
                 <Link href="/profile" style={{
-                  display: "block", padding: "13px 16px", borderRadius: 10,
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10,
                   background: "rgba(0,0,0,0.05)", textDecoration: "none",
-                  fontFamily: font, fontSize: 13, color: "#000000", fontWeight: 600,
                 }}>
-                  {displayName} · Profile
+                  <NavAvatar name={displayName} color={profile.avatarColor} />
+                  <span style={{ fontFamily: font, fontSize: 13, color: "#000000", fontWeight: 600 }}>
+                    {displayName}
+                  </span>
                 </Link>
                 <Link href="/vaults/new" style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
