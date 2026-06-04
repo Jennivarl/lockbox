@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Vault, Plus, LogOut, LogIn, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Vault, Plus, LogOut, LogIn, Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
-import { useBalance } from "@/lib/useBalance";
 import { useProfile } from "@/lib/useProfile";
 import NotificationBell from "@/components/NotificationBell";
 
@@ -26,20 +25,24 @@ function NavAvatar({ name, color }: { name: string; color: string }) {
 const NAV_LINKS = [
   { href: "/vaults",      label: "Vaults" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/shame",       label: "Hall of Shame" },
-  { href: "/docs",        label: "Docs" },
+];
+
+const MORE_LINKS = [
+  { href: "/shame", label: "Hall of Shame" },
+  { href: "/docs",  label: "Docs" },
 ];
 
 export default function Nav() {
   const path = usePathname();
   const isActive = (href: string) => href !== "/" ? path.startsWith(href) : path === href;
   const { ready, authenticated, login, logout, peerName, peerId } = useAuth();
-  const { balance } = useBalance();
   const { profile } = useProfile();
   const displayName = profile.displayName || peerName;
 
-  const [mobile, setMobile]   = useState(false);
+  const [mobile,   setMobile]   = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const check = () => setMobile(window.innerWidth < 768);
@@ -48,8 +51,15 @@ export default function Nav() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // close menu on route change
-  useEffect(() => { setMenuOpen(false); }, [path]);
+  // close menus on route change
+  useEffect(() => { setMenuOpen(false); setMoreOpen(false); }, [path]);
+
+  // close More dropdown on outside click
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
 
   return (
     <>
@@ -84,6 +94,39 @@ export default function Nav() {
                   {label}
                 </Link>
               ))}
+
+              {/* More dropdown */}
+              <div ref={moreRef} style={{ position: "relative" }}>
+                <button onClick={() => setMoreOpen(o => !o)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  fontFamily: font, fontSize: 14, fontWeight: 600, letterSpacing: "0.04em",
+                  color: MORE_LINKS.some(l => isActive(l.href)) ? "#000000" : "#222222",
+                  paddingBottom: 2,
+                  borderBottom: MORE_LINKS.some(l => isActive(l.href)) ? "2px solid #000000" : "2px solid transparent",
+                  background: "none", border: "none", borderBottomStyle: "solid", cursor: "pointer",
+                }}>
+                  More <ChevronDown style={{ width: 13, height: 13, transition: "transform 0.15s", transform: moreOpen ? "rotate(180deg)" : "rotate(0)" }} />
+                </button>
+                {moreOpen && (
+                  <div style={{
+                    position: "absolute", top: 34, left: "50%", transform: "translateX(-50%)",
+                    background: "#FFFFFF", borderRadius: 12, padding: "6px",
+                    border: "1px solid rgba(0,0,0,0.1)", boxShadow: "0 8px 28px rgba(0,0,0,0.12)",
+                    minWidth: 160, zIndex: 100,
+                  }}>
+                    {MORE_LINKS.map(({ href, label }) => (
+                      <Link key={href} href={href} style={{
+                        display: "block", padding: "10px 14px", borderRadius: 8,
+                        fontFamily: font, fontSize: 13, fontWeight: isActive(href) ? 700 : 500,
+                        color: "#000000", textDecoration: "none",
+                        background: isActive(href) ? "rgba(0,0,0,0.05)" : "transparent",
+                      }}>
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {ready && authenticated ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -166,7 +209,7 @@ export default function Nav() {
             background: "rgba(194,200,212,0.99)", borderTop: "1px solid rgba(0,0,0,0.1)",
             padding: "16px 20px 20px",
           }}>
-            {NAV_LINKS.map(({ href, label }) => (
+            {[...NAV_LINKS, ...MORE_LINKS].map(({ href, label }) => (
               <Link key={href} href={href} style={{
                 display: "block", padding: "13px 0",
                 borderBottom: "1px solid rgba(0,0,0,0.07)",
@@ -210,26 +253,6 @@ export default function Nav() {
         )}
       </nav>
 
-      {/* Floating balance chip — bottom left */}
-      {ready && authenticated && (
-        <Link href="/profile" style={{ textDecoration: "none" }}>
-          <div style={{
-            position: "fixed", bottom: 24, left: 24, zIndex: 40,
-            display: "inline-flex", alignItems: "center", gap: 7,
-            padding: "9px 14px", borderRadius: 24,
-            background: "rgba(5,150,105,0.12)",
-            border: "1.5px solid rgba(5,150,105,0.35)",
-            backdropFilter: "blur(12px)",
-            boxShadow: "0 4px 20px rgba(5,150,105,0.15)",
-            cursor: "pointer",
-          }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#059669" }} />
-            <span style={{ fontFamily: font, fontSize: 11, fontWeight: 700, color: "#059669", letterSpacing: "0.04em" }}>
-              {balance.toLocaleString()} RIAO
-            </span>
-          </div>
-        </Link>
-      )}
     </>
   );
 }
