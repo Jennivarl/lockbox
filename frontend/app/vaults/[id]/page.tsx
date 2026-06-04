@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target } from "lucide-react";
+import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target, Send, Copy, CheckCheck, TrendingUp } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -13,7 +13,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import { useBalance } from "@/lib/useBalance";
 import { useProfile } from "@/lib/useProfile";
-import type { Vault, Member, ReactiveEvent, Invite } from "@/lib/types";
+import type { Vault, Member, ReactiveEvent, Invite, Message } from "@/lib/types";
 
 const font = '"Space Mono", "Courier New", monospace';
 
@@ -219,7 +219,7 @@ function LockInModal({ vault, balance, onConfirm, onCancel, accentColor }: {
         )}
 
         <div style={{ fontFamily: font, fontSize: 11, color: "#9B9B9B", marginBottom: 20, lineHeight: 1.6 }}>
-          Quit before deadline? You forfeit <strong style={{ color: "#DC2626" }}>{vault.penalty_pct}%</strong> ({Math.round(vault.buy_in * vault.penalty_pct / 100).toLocaleString()} RIAO) to survivors.
+          Quit before deadline? You forfeit <strong style={{ color: "#DC2626" }}>{vault.penalty_pct}%</strong> ({Math.round(vault.buy_in * vault.penalty_pct / 100).toLocaleString()} RIAO) to survivors. Penalty escalates up to <strong style={{ color: "#DC2626" }}>{Math.min(vault.penalty_pct * 2, 95)}%</strong> the longer you wait.
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
@@ -260,6 +260,10 @@ export default function VaultPage() {
   const [flash,       setFlash]       = useState("");
   const [quitMsg,     setQuitMsg]     = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [messages,    setMessages]    = useState<Message[]>([]);
+  const [chatInput,   setChatInput]   = useState("");
+  const [copied,      setCopied]      = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const prevIds = useRef<Set<string>>(new Set());
 
   const load = async () => {
@@ -283,8 +287,10 @@ export default function VaultPage() {
 
   useEffect(() => {
     load();
+    loadMessages();
     const t = setInterval(load, 3000);
-    return () => clearInterval(t);
+    const tm = setInterval(loadMessages, 5000);
+    return () => { clearInterval(t); clearInterval(tm); };
   }, [id]);
 
   useEffect(() => {
@@ -312,6 +318,17 @@ export default function VaultPage() {
   const canRequest = vault.status === "filling" && !isMember && authenticated && !isCreator;
   const canQuit    = (vault.status === "filling" || vault.status === "active") && isMember;
   const canTrig    = vault.status === "filling" || vault.status === "active";
+
+  // Escalated penalty: scales base → 2× base over vault lifetime
+  const effectivePenalty = (() => {
+    if (vault.status !== "active") return vault.penalty_pct;
+    try {
+      const dl = new Date(vault.deadline).getTime();
+      const cr = new Date(vault.created_at).getTime();
+      const ratio = Math.min(Math.max((Date.now() - cr) / (dl - cr), 0), 1);
+      return Math.min(Math.round(vault.penalty_pct * (1 + ratio)), 95);
+    } catch { return vault.penalty_pct; }
+  })();
 
   const handleJoin = () => {
     if (!authenticated) { login(); return; }
@@ -357,6 +374,26 @@ export default function VaultPage() {
       setTimeout(() => setFlash(""), 4000);
       load();
     } catch (e) { setFlash((e as Error).message); setTimeout(() => setFlash(""), 4000); }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const loadMessages = async () => {
+    try { setMessages(await api.getMessages(id) as Message[]); } catch {}
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !authenticated) return;
+    try {
+      await api.postMessage(id, { peer_id: peerId, peer_name: displayName, content: chatInput.trim() });
+      setChatInput("");
+      await loadMessages();
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    } catch {}
   };
 
   const handleAccept = async (rid: string) => {
@@ -438,7 +475,7 @@ export default function VaultPage() {
                 {[
                   { label: "Pot locked",   value: vault.pot_total.toLocaleString(), unit: "RIAO",   color: meta.color },
                   { label: "Time left",    value: timeLeft(vault.deadline),          unit: "",        color: "#2563EB" },
-                  { label: "Quit penalty", value: `${vault.penalty_pct}%`,           unit: "on quit", color: "#DC2626" },
+                  { label: "Quit penalty", value: `${effectivePenalty}%`,             unit: vault.status === "active" && effectivePenalty > vault.penalty_pct ? "escalated" : "on quit", color: "#DC2626" },
                 ].map(s => (
                   <div key={s.label} style={{ borderRadius: 10, padding: "14px 12px", textAlign: "center", background: "#EDF0F5", border: "1px solid rgba(0,0,0,0.08)" }}>
                     <div style={{ fontFamily: font, fontSize: 20, fontWeight: 900, color: s.color, marginBottom: 2, letterSpacing: "-0.01em" }}>{s.value}</div>
@@ -581,7 +618,140 @@ export default function VaultPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Share + Activity Chart + Chat ─────────────────────────── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 20 }}>
+
+          {/* Share Invite Link */}
+          <div style={{ borderRadius: 14, padding: "20px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)" }}>
+            <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9B9B9B", marginBottom: 12 }}>
+              Share Vault
+            </div>
+            <p style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B", margin: "0 0 14px", lineHeight: 1.6 }}>
+              Invite someone to join this vault by sharing the link.
+            </p>
+            <button onClick={handleCopyLink} style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "10px 18px", borderRadius: 9, width: "100%", justifyContent: "center",
+              fontFamily: font, fontSize: 12, fontWeight: 700, letterSpacing: "0.04em",
+              background: copied ? "#059669" : "#000000", color: "#FFFFFF",
+              border: "none", cursor: "pointer", transition: "background 0.2s",
+            }}>
+              {copied ? <><CheckCheck style={{ width: 14, height: 14 }} /> Link Copied!</> : <><Copy style={{ width: 14, height: 14 }} /> Copy Invite Link</>}
+            </button>
+          </div>
+
+          {/* Activity Chart */}
+          <div style={{ borderRadius: 14, padding: "20px", background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <TrendingUp style={{ width: 13, height: 13, color: meta.color }} />
+              <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9B9B9B" }}>
+                Pot Activity
+              </div>
+            </div>
+            <ActivityChart vault={vault} color={meta.color} />
+          </div>
+        </div>
+
+        {/* Chat Panel */}
+        <div style={{ borderRadius: 14, marginTop: 20, background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)", overflow: "hidden" }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(0,0,0,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9B9B9B" }}>
+              Vault Chat
+            </div>
+            <span style={{ fontFamily: font, fontSize: 10, color: "#BBBBBB" }}>{messages.length} message{messages.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div style={{ maxHeight: 280, overflowY: "auto", padding: "12px 20px" }}>
+            {messages.length === 0 ? (
+              <p style={{ fontFamily: font, fontSize: 12, color: "#BBBBBB", textAlign: "center", padding: "20px 0", margin: 0 }}>
+                No messages yet. Be the first.
+              </p>
+            ) : messages.map(m => (
+              <div key={m.id} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
+                  <span style={{ fontFamily: font, fontSize: 12, fontWeight: 700, color: m.peer_id === peerId ? meta.color : "#000000" }}>
+                    {m.peer_name}
+                  </span>
+                  <span style={{ fontFamily: font, fontSize: 10, color: "#BBBBBB" }}>
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                <p style={{ fontFamily: font, fontSize: 12, color: "#333333", margin: 0, lineHeight: 1.6 }}>{m.content}</p>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+          <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(0,0,0,0.07)", display: "flex", gap: 10 }}>
+            <input
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); }}}
+              placeholder={authenticated ? "Say something…" : "Sign in to chat"}
+              disabled={!authenticated}
+              maxLength={500}
+              style={{
+                flex: 1, padding: "10px 14px", borderRadius: 9,
+                fontFamily: font, fontSize: 13, color: "#000000",
+                background: "#EDF0F5", border: "1px solid rgba(0,0,0,0.1)",
+                outline: "none",
+              }}
+            />
+            <button onClick={handleSendMessage} disabled={!authenticated || !chatInput.trim()} style={{
+              width: 42, height: 42, borderRadius: 9, flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: authenticated && chatInput.trim() ? meta.color : "#CCCCCC",
+              border: "none", cursor: authenticated && chatInput.trim() ? "pointer" : "not-allowed",
+            }}>
+              <Send style={{ width: 16, height: 16, color: "#FFFFFF" }} />
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
+  );
+}
+
+function ActivityChart({ vault, color }: { vault: Vault; color: string }) {
+  const events: { t: number; pot: number }[] = [];
+  const sorted = [...vault.members].sort((a, b) => new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime());
+  let pot = 0;
+  const start = sorted[0] ? new Date(sorted[0].joined_at).getTime() : Date.now();
+
+  sorted.forEach(m => {
+    pot += m.amount_locked;
+    events.push({ t: new Date(m.joined_at).getTime(), pot });
+  });
+
+  const quits = vault.members.filter(m => m.quit_at).sort((a, b) => new Date(a.quit_at!).getTime() - new Date(b.quit_at!).getTime());
+  quits.forEach(m => {
+    const refund = Math.round(m.amount_locked * 0.75);
+    pot = Math.max(0, pot - refund);
+    events.push({ t: new Date(m.quit_at!).getTime(), pot });
+  });
+
+  events.push({ t: Date.now(), pot });
+  events.sort((a, b) => a.t - b.t);
+
+  if (events.length < 2) return (
+    <p style={{ fontFamily: '"Space Mono",monospace', fontSize: 11, color: "#BBBBBB", margin: 0, textAlign: "center", paddingTop: 16 }}>
+      No activity yet
+    </p>
+  );
+
+  const W = 240, H = 72;
+  const maxPot = Math.max(...events.map(e => e.pot), 1);
+  const minT = events[0].t, maxT = events[events.length - 1].t || minT + 1;
+  const px = (t: number) => ((t - minT) / (maxT - minT)) * W;
+  const py = (p: number) => H - (p / maxPot) * H * 0.9 - 4;
+  const pts = events.map(e => `${px(e.t).toFixed(1)},${py(e.pot).toFixed(1)}`).join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 72, display: "block" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {events.map((e, i) => (
+        <circle key={i} cx={px(e.t)} cy={py(e.pot)} r="3" fill={color} />
+      ))}
+    </svg>
   );
 }

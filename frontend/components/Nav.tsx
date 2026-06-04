@@ -6,6 +6,7 @@ import { Vault, Plus, LogOut, LogIn, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { useBalance } from "@/lib/useBalance";
 import { useProfile } from "@/lib/useProfile";
+import NotificationBell from "@/components/NotificationBell";
 
 const font = '"Space Mono", "Courier New", monospace';
 function NavAvatar({ name, color }: { name: string; color: string }) {
@@ -25,13 +26,14 @@ function NavAvatar({ name, color }: { name: string; color: string }) {
 const NAV_LINKS = [
   { href: "/vaults",      label: "Vaults" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/shame",       label: "Hall of Shame" },
   { href: "/docs",        label: "Docs" },
 ];
 
 export default function Nav() {
   const path = usePathname();
   const isActive = (href: string) => href !== "/" ? path.startsWith(href) : path === href;
-  const { ready, authenticated, login, logout, peerName } = useAuth();
+  const { ready, authenticated, login, logout, peerName, peerId } = useAuth();
   const { balance } = useBalance();
   const { profile } = useProfile();
   const displayName = profile.displayName || peerName;
@@ -88,6 +90,7 @@ export default function Nav() {
                   <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
                     <NavAvatar name={displayName} color={profile.avatarColor} />
                   </Link>
+                  <NotificationBell peerId={peerId} />
                   <Link href="/vaults/new" style={{
                     display: "inline-flex", alignItems: "center", gap: 6,
                     padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,

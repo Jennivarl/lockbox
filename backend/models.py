@@ -105,3 +105,18 @@ class InviteOut(BaseModel):
     status: str
     created_at: str
     resolved_at: Optional[str]
+
+
+class MessageCreate(BaseModel):
+    peer_id: str
+    peer_name: str
+    content: str = Field(min_length=1, max_length=500)
+
+
+class MessageOut(BaseModel):
+    id: str
+    vault_id: str
+    peer_id: str
+    peer_name: str
+    content: str
+    created_at: str

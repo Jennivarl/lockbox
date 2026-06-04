@@ -16,6 +16,8 @@ from models import (
     InviteCreate,
     InviteOut,
     JoinRequest,
+    MessageCreate,
+    MessageOut,
     MemberOut,
     PeerOut,
     PeerUpsert,
@@ -309,7 +311,20 @@ async def rage_quit(vault_id: str, body: QuitRequest):
         if not row:
             raise HTTPException(404, "Not an active member of this vault")
 
-        result = await on_rage_quit(db, vault, dict(row))
+        # Penalty escalator: scales from base_pct → 2× base_pct over the vault lifetime
+        vault_with_pct = dict(vault)
+        if vault["status"] == "active":
+            try:
+                dl = datetime.fromisoformat(vault["deadline"].replace("Z", "+00:00"))
+                cr = datetime.fromisoformat(vault["created_at"].replace("Z", "+00:00"))
+                total = (dl - cr).total_seconds()
+                elapsed = (datetime.now(timezone.utc) - cr).total_seconds()
+                ratio = min(max(elapsed / total, 0), 1) if total > 0 else 0
+                vault_with_pct["penalty_pct"] = min(int(vault["penalty_pct"] * (1 + ratio)), 95)
+            except Exception:
+                pass
+
+        result = await on_rage_quit(db, vault_with_pct, dict(row))
         await db.commit()
         return result
     finally:
@@ -495,7 +510,7 @@ async def admin_reseed():
     """Wipe all data and re-run seed. Use once to load fresh demo data."""
     db = await get_db()
     try:
-        for table in ("invites", "reactive_events", "members", "vaults", "peers"):
+        for table in ("messages", "invites", "reactive_events", "members", "vaults", "peers"):
             await db.execute(f"DELETE FROM {table}", ())
         await db.commit()
     finally:
@@ -528,5 +543,65 @@ async def get_peer(peer_id: str):
         if not row:
             raise HTTPException(404, "Peer not found")
         return dict(row)
+    finally:
+        await db.close()
+
+
+# ── chat ───────────────────────────────────────────────────────────────────
+
+@app.post("/vaults/{vault_id}/chat", response_model=MessageOut, status_code=201)
+async def post_message(vault_id: str, body: MessageCreate):
+    db = await get_db()
+    try:
+        await _get_vault(db, vault_id)
+        msg_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        await db.execute(
+            "INSERT INTO messages VALUES (?,?,?,?,?,?)",
+            (msg_id, vault_id, body.peer_id, body.peer_name, body.content, now),
+        )
+        await db.commit()
+        return {"id": msg_id, "vault_id": vault_id, "peer_id": body.peer_id,
+                "peer_name": body.peer_name, "content": body.content, "created_at": now}
+    finally:
+        await db.close()
+
+
+@app.get("/vaults/{vault_id}/chat", response_model=list[MessageOut])
+async def get_messages(vault_id: str, limit: int = 50):
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT * FROM messages WHERE vault_id=? ORDER BY created_at ASC LIMIT ?",
+            (vault_id, limit),
+        ) as cur:
+            return [dict(r) for r in await cur.fetchall()]
+    finally:
+        await db.close()
+
+
+# ── notifications ──────────────────────────────────────────────────────────
+
+@app.get("/notifications", response_model=list[ReactiveEventOut])
+async def get_notifications(peer_id: str, limit: int = 30):
+    """Return recent reactive events for vaults the peer is a member of."""
+    db = await get_db()
+    try:
+        async with db.execute(
+            "SELECT DISTINCT vault_id FROM members WHERE peer_id=?", (peer_id,)
+        ) as cur:
+            vault_ids = [r["vault_id"] for r in await cur.fetchall()]
+        if not vault_ids:
+            return []
+        placeholders = ",".join("?" * len(vault_ids))
+        async with db.execute(
+            f"SELECT * FROM reactive_events WHERE json_extract(payload,'$.vault_id') IN ({placeholders}) "
+            f"ORDER BY fired_at DESC LIMIT ?",
+            (*vault_ids, limit),
+        ) as cur:
+            rows = [dict(r) for r in await cur.fetchall()]
+        for r in rows:
+            r["payload"] = json.loads(r["payload"])
+        return rows
     finally:
         await db.close()

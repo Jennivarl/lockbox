@@ -1,4 +1,4 @@
-import type { Vault, Peer, ReactiveEvent, ReactiveRule, Stats, Invite } from "./types";
+import type { Vault, Peer, ReactiveEvent, ReactiveRule, Stats, Invite, Message } from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001";
 
@@ -34,6 +34,9 @@ export const api = {
   upsertPeer:     (body: object)                   => post<Peer>("/peers", body),
   requestJoin:    (id: string, body: object)       => post(`/vaults/${id}/requests`, body),
   getRequests:    (id: string)                     => get<Invite[]>(`/vaults/${id}/requests`),
-  acceptRequest:  (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/accept`, body),
-  rejectRequest:  (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/reject`, body),
+  acceptRequest:   (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/accept`, body),
+  rejectRequest:   (id: string, rid: string, body: object) => post(`/vaults/${id}/requests/${rid}/reject`, body),
+  getMessages:     (id: string)                            => get<Message[]>(`/vaults/${id}/chat`),
+  postMessage:     (id: string, body: object)              => post<Message>(`/vaults/${id}/chat`, body),
+  notifications:   (peerId: string)                        => get<ReactiveEvent[]>("/notifications", { peer_id: peerId }),
 };

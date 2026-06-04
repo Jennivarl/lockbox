@@ -73,6 +73,16 @@ SCHEMA = [
         resolved_at TEXT DEFAULT NULL
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS messages (
+        id          TEXT PRIMARY KEY,
+        vault_id    TEXT NOT NULL REFERENCES vaults(id),
+        peer_id     TEXT NOT NULL,
+        peer_name   TEXT NOT NULL,
+        content     TEXT NOT NULL,
+        created_at  TEXT NOT NULL
+    )
+    """,
 ]
 
 

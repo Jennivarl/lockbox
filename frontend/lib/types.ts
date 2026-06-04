@@ -64,6 +64,15 @@ export interface Stats {
   total_peers: number;
 }
 
+export interface Message {
+  id: string;
+  vault_id: string;
+  peer_id: string;
+  peer_name: string;
+  content: string;
+  created_at: string;
+}
+
 export interface Invite {
   id: string;
   vault_id: string;
