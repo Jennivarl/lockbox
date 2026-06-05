@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Vault, Plus, LogOut, LogIn, Menu, X, ChevronDown } from "lucide-react";
+import { Vault, LogOut, LogIn, Menu, X, ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { useProfile } from "@/lib/useProfile";
 import NotificationBell from "@/components/NotificationBell";
@@ -134,14 +134,6 @@ export default function Nav() {
                     <NavAvatar name={displayName} color={profile.avatarColor} />
                   </Link>
                   <NotificationBell peerId={peerId} />
-                  <Link href="/vaults/new" style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                    fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
-                    background: "#000000", color: "#FFFFFF", textDecoration: "none",
-                  }}>
-                    <Plus style={{ width: 14, height: 14 }} /> New Vault
-                  </Link>
                   <button onClick={logout} style={{
                     display: "inline-flex", alignItems: "center",
                     padding: "9px 14px", borderRadius: 8, fontSize: 12,
@@ -218,14 +210,6 @@ export default function Nav() {
                   <span style={{ fontFamily: font, fontSize: 13, color: "#000000", fontWeight: 600 }}>
                     {displayName}
                   </span>
-                </Link>
-                <Link href="/vaults/new" style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  padding: "13px", borderRadius: 10,
-                  fontFamily: font, fontSize: 13, fontWeight: 700, letterSpacing: "0.06em",
-                  background: "#000000", color: "#FFFFFF", textDecoration: "none",
-                }}>
-                  <Plus style={{ width: 14, height: 14 }} /> New Vault
                 </Link>
                 <button onClick={logout} style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,

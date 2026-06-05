@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Timer, Users, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target } from "lucide-react";
+import { Timer, Users, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target, Plus } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { ProgressBar } from "@/components/ProgressBar";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 import type { Vault } from "@/lib/types";
 
 const font = '"Space Mono", "Courier New", monospace';
@@ -141,6 +143,8 @@ const TYPE_FILTERS = ["all", "savings", "accountability", "dao", "vesting"] as c
 const STATUS_FILTERS = ["filling", "active", "completed", "dead"] as const;
 
 export default function VaultsPage() {
+  const router = useRouter();
+  const { authenticated, login } = useAuth();
   const [vaults,       setVaults]       = useState<Vault[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [typeFilter,   setTypeFilter]   = useState<string>("all");
@@ -174,13 +178,22 @@ export default function VaultsPage() {
           <ArrowLeft style={{ width: 15, height: 15 }} /> Home
         </Link>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 28 }}>
-          <div>
-            <h1 style={{ fontFamily: font, fontSize: 32, fontWeight: 900, color: "#000000", letterSpacing: "-0.02em", marginBottom: 4 }}>Vaults</h1>
-            <p style={{ fontFamily: font, fontSize: 14, color: "#6B6B6B" }}>
-              {open} open · {locked.toLocaleString()} RIAO at stake
-            </p>
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 4 }}>
+            <h1 style={{ fontFamily: font, fontSize: 32, fontWeight: 900, color: "#000000", letterSpacing: "-0.02em", margin: 0 }}>Vaults</h1>
+            <button onClick={() => authenticated ? router.push("/vaults/new") : login()} style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "7px 16px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+              fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
+              background: "transparent", color: "#000000",
+              border: "1px solid rgba(0,0,0,0.3)", cursor: "pointer",
+            }}>
+              <Plus style={{ width: 13, height: 13 }} /> Create Vault
+            </button>
           </div>
+          <p style={{ fontFamily: font, fontSize: 14, color: "#6B6B6B", margin: 0 }}>
+            {open} open · {locked.toLocaleString()} RIAO at stake
+          </p>
         </div>
 
         {/* Type filters */}
