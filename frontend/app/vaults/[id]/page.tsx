@@ -304,6 +304,116 @@ function LockInModal({ vault, balance, onConfirm, onCancel, accentColor }: {
   );
 }
 
+function QuitConfirmModal({ vault, lockedAmount, effectivePenalty, remainingCount, accentColor, onConfirm, onCancel }: {
+  vault: Vault; lockedAmount: number; effectivePenalty: number; remainingCount: number;
+  accentColor: string; onConfirm: () => void; onCancel: () => void;
+}) {
+  const penaltyAmt   = Math.round(lockedAmount * effectivePenalty / 100);
+  const refund       = lockedAmount - penaltyAmt;
+  const perMember    = remainingCount > 0 ? Math.round(penaltyAmt / remainingCount) : 0;
+  const isEscalated  = effectivePenalty > vault.penalty_pct;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 200,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+    }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.18 }}
+        style={{
+          background: "#FFFFFF", borderRadius: 20, padding: "30px 30px 24px",
+          width: 440, boxShadow: "0 24px 60px rgba(0,0,0,0.22)",
+          border: "2px solid rgba(220,38,38,0.2)",
+        }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: 11,
+            background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>
+            <UserX style={{ width: 19, height: 19, color: "#DC2626" }} strokeWidth={1.8} />
+          </div>
+          <div>
+            <div style={{ fontFamily: font, fontSize: 15, fontWeight: 900, color: "#000000" }}>Quit vault?</div>
+            <div style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B", marginTop: 2 }}>{vault.name}</div>
+          </div>
+        </div>
+
+        {/* Breakdown */}
+        <div style={{ borderRadius: 12, background: "#EDF0F5", border: "1px solid rgba(0,0,0,0.08)", padding: "18px 20px", marginBottom: 16 }}>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>Your locked stake</span>
+            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 700, color: "#000000" }}>
+              {lockedAmount.toLocaleString()} RIAO
+            </span>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#DC2626" }}>
+              Penalty ({effectivePenalty}%{isEscalated ? " — escalated" : ""})
+            </span>
+            <span style={{ fontFamily: font, fontSize: 14, fontWeight: 900, color: "#DC2626" }}>
+              −{penaltyAmt.toLocaleString()} RIAO
+            </span>
+          </div>
+
+          {isEscalated && (
+            <div style={{ fontFamily: font, fontSize: 10, color: "#D97706", marginBottom: 8 }}>
+              Base was {vault.penalty_pct}% — escalated +{effectivePenalty - vault.penalty_pct}% over time
+            </div>
+          )}
+
+          <div style={{ height: 1, background: "rgba(0,0,0,0.08)", margin: "12px 0" }} />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>You walk away with</span>
+            <span style={{ fontFamily: font, fontSize: 18, fontWeight: 900, color: "#059669", letterSpacing: "-0.02em" }}>
+              {refund.toLocaleString()} RIAO
+            </span>
+          </div>
+
+          {remainingCount > 0 && (
+            <div style={{
+              borderRadius: 8, padding: "10px 14px",
+              background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.12)",
+            }}>
+              <div style={{ fontFamily: font, fontSize: 11, color: "#DC2626", marginBottom: 4 }}>
+                Your {penaltyAmt.toLocaleString()} RIAO penalty is split between {remainingCount} remaining member{remainingCount !== 1 ? "s" : ""}
+              </div>
+              <div style={{ fontFamily: font, fontSize: 13, fontWeight: 900, color: "#DC2626" }}>
+                +{perMember.toLocaleString()} RIAO each
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={onCancel} style={{
+            flex: 1, padding: "12px 0", borderRadius: 10,
+            fontFamily: font, fontSize: 13, fontWeight: 700,
+            background: "transparent", color: "#6B6B6B",
+            border: "1px solid rgba(0,0,0,0.15)", cursor: "pointer",
+          }}>
+            Stay In
+          </button>
+          <button onClick={onConfirm} style={{
+            flex: 2, padding: "12px 0", borderRadius: 10,
+            fontFamily: font, fontSize: 13, fontWeight: 700, letterSpacing: "0.03em",
+            background: "#DC2626", color: "#FFFFFF",
+            border: "none", cursor: "pointer",
+          }}>
+            Confirm Quit — lose {penaltyAmt.toLocaleString()} RIAO
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function PenaltyEscalatorChart({ vault, accentColor }: { vault: Vault; accentColor: string }) {
   const basePct = vault.penalty_pct;
   const maxPct  = Math.min(basePct * 2, 95);
@@ -453,7 +563,8 @@ export default function VaultPage() {
   const [newIds,      setNewIds]      = useState<Set<string>>(new Set());
   const [flash,       setFlash]       = useState("");
   const [quitMsg,     setQuitMsg]     = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm,     setShowConfirm]     = useState(false);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [messages,    setMessages]    = useState<Message[]>([]);
   const [chatInput,   setChatInput]   = useState("");
   const [copied,      setCopied]      = useState(false);
@@ -546,8 +657,10 @@ export default function VaultPage() {
     } catch (e) { setFlash((e as Error).message); setTimeout(() => setFlash(""), 4000); }
   };
 
-  const handleQuit = async () => {
-    if (!confirm("Are you sure? You will lose your penalty to other members.")) return;
+  const handleQuit = () => setShowQuitConfirm(true);
+
+  const handleConfirmQuit = async () => {
+    setShowQuitConfirm(false);
     try {
       const r = await api.quit(id, { peer_id: peerId }) as { ok: boolean; penalty: number; refund: number; reason?: string; hours_remaining?: number };
       if (!r.ok && r.reason === "too_early") {
@@ -617,6 +730,22 @@ export default function VaultPage() {
           onCancel={() => setShowConfirm(false)}
         />
       )}
+      {showQuitConfirm && vault && (() => {
+        const myMember = vault.members.find(m => m.peer_id === peerId && m.status === "active");
+        const remaining = vault.members.filter(m => m.peer_id !== peerId && m.status === "active");
+        if (!myMember) return null;
+        return (
+          <QuitConfirmModal
+            vault={vault}
+            lockedAmount={myMember.amount_locked}
+            effectivePenalty={effectivePenalty}
+            remainingCount={remaining.length}
+            accentColor={meta.color}
+            onConfirm={handleConfirmQuit}
+            onCancel={() => setShowQuitConfirm(false)}
+          />
+        );
+      })()}
       <Nav />
       <div style={{ maxWidth: 1060, margin: "0 auto", padding: "36px 32px" }}>
 
