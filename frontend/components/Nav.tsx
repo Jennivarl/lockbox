@@ -86,20 +86,27 @@ export default function Nav() {
 
 
               {ready && authenticated ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <NotificationBell peerId={peerId} />
-                  <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-                    <NavAvatar name={displayName} color={profile.avatarColor} image={profile.avatarImage} />
-                  </Link>
-                  <button onClick={logout} style={{
-                    display: "inline-flex", alignItems: "center",
-                    padding: "9px 14px", borderRadius: 8, fontSize: 12,
-                    fontFamily: font, cursor: "pointer",
-                    background: "transparent", color: "#6B6B6B",
-                    border: "1px solid rgba(0,0,0,0.15)",
+                  <div style={{
+                    display: "flex", alignItems: "center",
+                    background: "#FFFFFF", borderRadius: 12,
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    overflow: "hidden",
                   }}>
-                    <LogOut style={{ width: 13, height: 13 }} />
-                  </button>
+                    <Link href="/profile" style={{ display: "flex", alignItems: "center", padding: "6px 10px", textDecoration: "none" }}>
+                      <NavAvatar name={displayName} color={profile.avatarColor} image={profile.avatarImage} />
+                    </Link>
+                    <div style={{ width: 1, height: 24, background: "rgba(0,0,0,0.1)" }} />
+                    <button onClick={logout} style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      padding: "6px 12px", height: "100%",
+                      fontFamily: font, cursor: "pointer",
+                      background: "transparent", color: "#6B6B6B", border: "none",
+                    }}>
+                      <LogOut style={{ width: 14, height: 14 }} />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button onClick={login} style={{
