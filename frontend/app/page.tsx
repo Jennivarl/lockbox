@@ -51,9 +51,8 @@ export default function Home() {
             Lock in. Hold the line. Get paid.
           </h1>
 
-          <p style={{ fontFamily: font, fontSize: 19, color: "#6B6B6B", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 44px" }}>
-            Commit with your group. Rage quit early and lose your penalty to people who stayed.
-            Survive to the deadline and everyone gets paid — plus the quitters&apos; share.
+          <p style={{ fontFamily: font, fontSize: 18, color: "#6B6B6B", lineHeight: 1.75, maxWidth: 540, margin: "0 auto 44px" }}>
+            Lock funds with your group as a public commitment. Anyone who walks away early forfeits a penalty to everyone who stayed. Reach the deadline and the full pot is yours.
           </p>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
