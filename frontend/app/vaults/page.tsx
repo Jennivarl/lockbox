@@ -3,10 +3,9 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { Timer, Users, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target, Plus, ArrowRight } from "lucide-react";
+import { PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target, Plus, ArrowRight } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
-import { ProgressBar } from "@/components/ProgressBar";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import type { Vault } from "@/lib/types";
@@ -53,21 +52,67 @@ function getVaultIcon(name: string, type: string): React.ElementType {
   return Target;
 }
 
-function timeLeft(deadline: string) {
-  const ms = new Date(deadline).getTime() - Date.now();
-  if (ms <= 0) return "Ended";
-  const h = Math.floor(ms / 3_600_000);
-  if (h < 1) return `${Math.floor(ms / 60_000)}m`;
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
+function useCountdown(deadline: string) {
+  const calc = () => {
+    const ms = new Date(deadline).getTime() - Date.now();
+    if (ms <= 0) return { label: "Ended", color: "#9B9B9B" };
+    const totalSec = Math.floor(ms / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    let label = "";
+    if (d > 0) label = `${d}d ${h}h`;
+    else if (h > 0) label = `${h}h ${m}m`;
+    else label = `${m}m ${s}s`;
+    const color = d >= 7 ? "#6B6B6B" : d >= 1 ? "#D97706" : "#DC2626";
+    return { label, color };
+  };
+  const [tick, setTick] = useState(calc);
+  useEffect(() => {
+    const t = setInterval(() => setTick(calc()), 1000);
+    return () => clearInterval(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deadline]);
+  return tick;
+}
+
+function MemberSlots({ filled, total, color }: { filled: number; total: number; color: string }) {
+  const display = Math.min(total, 10);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B", fontWeight: 600 }}>
+          <span style={{ color: "#000000", fontWeight: 900 }}>{filled}</span>/{total} members locked in
+        </span>
+        <span style={{ fontFamily: font, fontSize: 10, color: "#9B9B9B" }}>
+          {total - filled} slot{total - filled !== 1 ? "s" : ""} open
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 4 }}>
+        {Array.from({ length: display }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
+            transition={{ delay: i * 0.04, duration: 0.3, ease: "easeOut" }}
+            style={{
+              flex: 1, height: 6, borderRadius: 3,
+              background: i < filled ? color : "rgba(0,0,0,0.1)",
+              transformOrigin: "bottom",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function VaultCard({ v, index }: { v: Vault; index: number }) {
   const active   = v.members.filter(m => m.status === "active");
   const quits    = v.members.filter(m => m.status === "quit");
-  const progress = Math.round((active.length / v.max_members) * 100);
   const meta     = TYPE_META[v.type] ?? TYPE_META.vesting;
   const TypeIcon = getVaultIcon(v.name, v.type);
+  const { label: timeLabel, color: timeColor } = useCountdown(v.deadline);
 
   return (
     <Link href={`/vaults/${v.id}`} style={{ textDecoration: "none" }}>
@@ -124,34 +169,31 @@ function VaultCard({ v, index }: { v: Vault; index: number }) {
           {v.description}
         </p>
 
-        <div style={{ marginBottom: 6 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontFamily: font, fontSize: 11, color: "#9B9B9B" }}>
-              {active.length}/{v.max_members} members
-            </span>
-            {v.buy_in > 0 && (
-              <span style={{ fontFamily: font, fontSize: 11, color: "#9B9B9B" }}>
-                {v.buy_in.toLocaleString()} RIAO buy-in
-              </span>
-            )}
-          </div>
-          <ProgressBar progress={progress} color={meta.color} delay={index * 0.05 + 0.2} />
+        {/* Member slots */}
+        <div style={{ marginBottom: 16 }}>
+          <MemberSlots filled={active.length} total={v.max_members} color={meta.color} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontFamily: font, fontSize: 11, color: "#9B9B9B" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Timer style={{ width: 13, height: 13 }} />
-            <span>{timeLeft(v.deadline)}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: font, fontSize: 11 }}>
+          {/* Live countdown */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            padding: "4px 10px", borderRadius: 6,
+            background: `${timeColor}12`, border: `1px solid ${timeColor}30`,
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: timeColor, flexShrink: 0 }} />
+            <span style={{ color: timeColor, fontWeight: 700, letterSpacing: "0.04em" }}>{timeLabel}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Users style={{ width: 13, height: 13 }} />
-            <span>{active.length}/{v.max_members}</span>
-          </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {quits.length > 0 && (
               <span style={{ color: "#DC2626", fontWeight: 700 }}>{quits.length} quit</span>
             )}
-            <span style={{ fontWeight: 700, color: meta.color }}>{v.penalty_pct}% slash</span>
+            <span style={{
+              padding: "3px 8px", borderRadius: 5,
+              background: `${meta.color}15`, color: meta.color, fontWeight: 700,
+            }}>
+              {v.penalty_pct}% slash
+            </span>
           </div>
         </div>
       </motion.div>
