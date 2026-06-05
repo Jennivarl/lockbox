@@ -91,42 +91,36 @@ export default function Home() {
       </section>
 
       {/* Divider */}
-      <div style={{ maxWidth: 1060, margin: "0 auto", padding: "0 32px" }}>
-        <div style={{ height: 1, background: "rgba(0,0,0,0.07)" }} />
-      </div>
+      <div style={{ height: 1, background: "rgba(0,0,0,0.07)" }} />
 
-      {/* Live Stats */}
-      <section style={{ maxWidth: 1060, margin: "0 auto", padding: "60px 32px", position: "relative", zIndex: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)" }}>
-          {[
-            { label: "RIAO locked right now", value: stats.total_locked.toLocaleString(), accent: "#059669", tint: "#064e35" },
-            { label: "Active vaults",          value: String(stats.active_vaults),        accent: "#2563EB", tint: "#0f2d6b" },
-            { label: "Rage quits fired",       value: String(stats.total_rage_quits),     accent: "#DC2626", tint: "#6b0f0f" },
-          ].map((s, i) => (
-            <motion.div key={s.label}
-              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.45 }}
-              style={{
-                padding: "32px 36px",
-                borderTop: `2px solid ${s.accent}`,
-                borderRight: i < 2 ? "1px solid rgba(0,0,0,0.07)" : "none",
-                background: `${s.accent}10`,
-              }}>
-              <div style={{ fontFamily: '"Space Mono", "Courier New", monospace', fontSize: 29, fontWeight: 700, color: s.tint, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 12 }}>
-                {s.value ?? "—"}
-              </div>
-              <div style={{ fontFamily: font, fontSize: 13, color: "#6B6B6B", letterSpacing: "0.01em" }}>
-                {s.label}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* Live Stats — full bleed */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)" }}>
+        {[
+          { label: "RIAO locked right now", value: stats.total_locked.toLocaleString(), accent: "#059669", tint: "#064e35" },
+          { label: "Active vaults",          value: String(stats.active_vaults),        accent: "#2563EB", tint: "#0f2d6b" },
+          { label: "Rage quits fired",       value: String(stats.total_rage_quits),     accent: "#DC2626", tint: "#6b0f0f" },
+        ].map((s, i) => (
+          <motion.div key={s.label}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1, duration: 0.45 }}
+            style={{
+              padding: "48px 56px",
+              borderTop: `2px solid ${s.accent}`,
+              borderRight: i < 2 ? "1px solid rgba(0,0,0,0.07)" : "none",
+              background: `${s.accent}10`,
+            }}>
+            <div style={{ fontFamily: '"Space Mono", "Courier New", monospace', fontSize: 32, fontWeight: 700, color: s.tint, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 12 }}>
+              {s.value ?? "—"}
+            </div>
+            <div style={{ fontFamily: font, fontSize: 13, color: "#6B6B6B", letterSpacing: "0.01em" }}>
+              {s.label}
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Divider */}
-      <div style={{ maxWidth: 1060, margin: "0 auto", padding: "0 32px" }}>
-        <div style={{ height: 1, background: "rgba(0,0,0,0.07)" }} />
-      </div>
+      <div style={{ height: 1, background: "rgba(0,0,0,0.07)" }} />
 
       {/* How It Works */}
       <section style={{ maxWidth: 1060, margin: "0 auto", padding: "60px 32px 80px", position: "relative", zIndex: 10 }}>
