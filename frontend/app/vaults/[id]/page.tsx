@@ -955,8 +955,17 @@ export default function VaultPage() {
             </div>
 
             <div style={{ marginTop: 16, borderRadius: 12, padding: "18px 20px", background: meta.bg, border: `1px solid ${meta.color}20` }}>
-              <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color, marginBottom: 12 }}>
-                Rules on this vault
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color }}>
+                  Rules on this vault
+                </div>
+                <Link href={`/vaults/${id}/rules`} style={{
+                  fontFamily: font, fontSize: 10, fontWeight: 700, color: meta.color,
+                  textDecoration: "none", letterSpacing: "0.04em",
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                }}>
+                  Full spec →
+                </Link>
               </div>
               {[
                 ["ON rage_quit",            "→ SLASH + REDISTRIBUTE"],
