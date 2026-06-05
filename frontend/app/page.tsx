@@ -121,6 +121,14 @@ export default function Home() {
             </motion.div>
           ))}
         </div>
+        <div style={{ padding: "12px 0 0", textAlign: "right" }}>
+          <Link href="/stats" style={{
+            fontFamily: font, fontSize: 11, fontWeight: 700, color: "#6B6B6B",
+            textDecoration: "none", letterSpacing: "0.04em",
+          }}>
+            View full analytics →
+          </Link>
+        </div>
       </div>
 
       {/* Divider */}
