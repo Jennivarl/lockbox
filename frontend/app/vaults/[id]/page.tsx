@@ -304,6 +304,141 @@ function LockInModal({ vault, balance, onConfirm, onCancel, accentColor }: {
   );
 }
 
+function PenaltyEscalatorChart({ vault, accentColor }: { vault: Vault; accentColor: string }) {
+  const basePct = vault.penalty_pct;
+  const maxPct  = Math.min(basePct * 2, 95);
+  const isActive = vault.status === "active";
+
+  const createdMs  = new Date(vault.created_at).getTime();
+  const deadlineMs = new Date(vault.deadline).getTime();
+  const nowMs      = Date.now();
+  const ratio      = isActive
+    ? Math.min(Math.max((nowMs - createdMs) / (deadlineMs - createdMs), 0), 1)
+    : 0;
+  const currentPct = Math.min(Math.round(basePct * (1 + ratio)), 95);
+
+  // SVG layout
+  const VW = 320, VH = 108;
+  const PL = 44, PR = 16, PT = 14, PB = 28;
+  const pw = VW - PL - PR;
+  const ph = VH - PT - PB;
+
+  const px = (r: number) => PL + r * pw;
+  const py = (pct: number) => PT + ph - ((pct - basePct) / (maxPct - basePct)) * ph;
+
+  // Curve: 40 points for smooth line
+  const pts = Array.from({ length: 41 }, (_, i) => {
+    const r = i / 40;
+    return `${px(r).toFixed(1)},${py(Math.min(basePct * (1 + r), 95)).toFixed(1)}`;
+  }).join(" ");
+
+  const nowX  = px(ratio);
+  const nowY  = py(currentPct);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+      style={{
+        borderRadius: 14, padding: "20px 20px 16px",
+        background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)",
+        marginBottom: 20,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <div>
+          <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: "#9B9B9B", marginBottom: 3 }}>
+            Penalty Escalator
+          </div>
+          <div style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B" }}>
+            The longer you wait to quit, the more you lose
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontFamily: font, fontSize: 22, fontWeight: 900, color: "#DC2626", letterSpacing: "-0.02em" }}>
+            {currentPct}%
+          </div>
+          <div style={{ fontFamily: font, fontSize: 10, color: "#9B9B9B" }}>
+            {isActive ? "now" : "base"} penalty
+          </div>
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${VW} ${VH}`} style={{ width: "100%", height: VH, display: "block" }}>
+        {/* Y-axis labels */}
+        <text x={PL - 6} y={PT + 4} textAnchor="end" fontFamily="Space Mono, monospace" fontSize="9" fill="#9B9B9B">{maxPct}%</text>
+        <text x={PL - 6} y={VH - PB + 4} textAnchor="end" fontFamily="Space Mono, monospace" fontSize="9" fill="#9B9B9B">{basePct}%</text>
+
+        {/* Grid lines */}
+        <line x1={PL} y1={PT} x2={PL + pw} y2={PT} stroke="rgba(0,0,0,0.05)" strokeWidth="1" />
+        <line x1={PL} y1={VH - PB} x2={PL + pw} y2={VH - PB} stroke="rgba(0,0,0,0.05)" strokeWidth="1" />
+        <line x1={PL} y1={PT} x2={PL} y2={VH - PB} stroke="rgba(0,0,0,0.05)" strokeWidth="1" />
+
+        {/* X-axis labels */}
+        <text x={PL} y={VH - 4} textAnchor="start" fontFamily="Space Mono, monospace" fontSize="9" fill="#BBBBBB">Start</text>
+        <text x={PL + pw} y={VH - 4} textAnchor="end" fontFamily="Space Mono, monospace" fontSize="9" fill="#BBBBBB">Deadline</text>
+
+        {/* Filled area under curve */}
+        <polygon
+          points={`${px(0)},${VH - PB} ${pts} ${px(1)},${VH - PB}`}
+          fill="#DC262610"
+        />
+
+        {/* Escalation curve */}
+        <polyline points={pts} fill="none" stroke="#DC2626" strokeWidth="2"
+          strokeLinejoin="round" strokeLinecap="round"
+          strokeOpacity={isActive ? 1 : 0.35}
+        />
+
+        {isActive && (
+          <>
+            {/* "YOU ARE HERE" vertical dashed line */}
+            <line x1={nowX} y1={PT} x2={nowX} y2={VH - PB}
+              stroke="#DC2626" strokeWidth="1.5" strokeDasharray="3 3" strokeOpacity="0.5" />
+
+            {/* Current position dot */}
+            <circle cx={nowX} cy={nowY} r="5" fill="#DC2626" />
+            <circle cx={nowX} cy={nowY} r="9" fill="none" stroke="#DC2626" strokeWidth="1.5" strokeOpacity="0.3" />
+
+            {/* "NOW" label — flip side if too close to right edge */}
+            <text
+              x={ratio > 0.78 ? nowX - 8 : nowX + 8}
+              y={nowY - 10}
+              textAnchor={ratio > 0.78 ? "end" : "start"}
+              fontFamily="Space Mono, monospace" fontSize="9" fontWeight="700" fill="#DC2626"
+            >
+              NOW · {currentPct}%
+            </text>
+          </>
+        )}
+
+        {!isActive && (
+          <text x={PL + pw / 2} y={PT + ph / 2 + 4} textAnchor="middle"
+            fontFamily="Space Mono, monospace" fontSize="10" fill="#BBBBBB">
+            Escalation begins when vault activates
+          </text>
+        )}
+      </svg>
+
+      {/* Legend */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ width: 16, height: 2, background: "#DC2626", borderRadius: 1 }} />
+          <span style={{ fontFamily: font, fontSize: 10, color: "#9B9B9B" }}>
+            {basePct}% → {maxPct}% over vault lifetime
+          </span>
+        </div>
+        {isActive && (
+          <span style={{ fontFamily: font, fontSize: 10, color: "#DC2626", fontWeight: 700 }}>
+            +{currentPct - basePct}% escalated so far
+          </span>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function VaultPage() {
   const { id }    = useParams<{ id: string }>();
   const router    = useRouter();
@@ -546,6 +681,9 @@ export default function VaultPage() {
 
               <ProgressBar progress={progress} color={meta.color} showLabel />
             </motion.div>
+
+            {/* Penalty Escalator */}
+            <PenaltyEscalatorChart vault={vault} accentColor={meta.color} />
 
             {/* Members */}
             <div style={{ marginBottom: 20 }}>
