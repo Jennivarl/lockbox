@@ -1,5 +1,5 @@
 """
-Demo seed data — 24 vaults: mixed types, states, and themes including World Cup 2026.
+Demo seed data — 27 vaults: mixed types, states, and themes including World Cup 2026.
 """
 import json
 import uuid
@@ -444,6 +444,43 @@ async def seed():
                 (_id(), v16, pid, name, 800, 800, _ago(hours=h), None, "active"))
         await _evt(db, "member_joined", "notification", 'kai.eth joined "No-Code Ship Challenge"',
             {"vault_id": v16, "pot_total": 800}, _ago(hours=6))
+
+        # ══════════════════════════════════════════════════════════════════════
+        # 26. SAVINGS / filling — World Cup Away Trip Fund
+        # ══════════════════════════════════════════════════════════════════════
+        v26 = _id()
+        await db.execute(
+            "INSERT INTO vaults VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (v26, "World Cup Away Trip Fund",
+             "4 die-hard fans lock 3,500 RIAO each to commit to travelling together "
+             "and watching the World Cup final live. Miss the trip? Lose 25% to those who showed up.",
+             "savings", 3500, 4, 25, 48, _from_now(days=44),
+             "filling", "peer-carol", "carol.eth", 7000, _ago(minutes=28)),
+        )
+        for pid, name, h in [("peer-carol", "carol.eth", 28), ("peer-dave", "dave.eth", 15)]:
+            await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
+                (_id(), v26, pid, name, 3500, 3500, _ago(hours=h), None, "active"))
+        await _evt(db, "member_joined", "notification", 'carol.eth opened "World Cup Away Trip Fund"',
+            {"vault_id": v26, "pot_total": 3500}, _ago(hours=28))
+        await _evt(db, "member_joined", "notification", 'dave.eth joined "World Cup Away Trip Fund"',
+            {"vault_id": v26, "pot_total": 7000}, _ago(hours=15))
+
+        # ══════════════════════════════════════════════════════════════════════
+        # 27. VESTING / filling — Founder Commitment Pact
+        # ══════════════════════════════════════════════════════════════════════
+        v27 = _id()
+        await db.execute(
+            "INSERT INTO vaults VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (v27, "Founder Commitment Pact",
+             "3 co-founders each lock 6,000 RIAO as a public vesting signal. "
+             "Leave the project before the cliff and forfeit 30% to the founders who stayed the course.",
+             "vesting", 6000, 3, 30, 72, _from_now(days=28),
+             "filling", "peer-marco", "marco.eth", 6000, _ago(hours=1, minutes=13)),
+        )
+        await db.execute("INSERT INTO members VALUES (?,?,?,?,?,?,?,?,?)",
+            (_id(), v27, "peer-marco", "marco.eth", 6000, 6000, _ago(hours=10), None, "active"))
+        await _evt(db, "member_joined", "notification", 'marco.eth opened "Founder Commitment Pact"',
+            {"vault_id": v27, "pot_total": 6000}, _ago(hours=10))
 
         # ══════════════════════════════════════════════════════════════════════
         # 17. SAVINGS / completed — Down Payment Club
