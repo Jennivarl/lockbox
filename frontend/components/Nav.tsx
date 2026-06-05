@@ -84,10 +84,10 @@ export default function Nav() {
 
               {ready && authenticated ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <NotificationBell peerId={peerId} />
                   <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
                     <NavAvatar name={displayName} color={profile.avatarColor} />
                   </Link>
-                  <NotificationBell peerId={peerId} />
                   <button onClick={logout} style={{
                     display: "inline-flex", alignItems: "center",
                     padding: "9px 14px", borderRadius: 8, fontSize: 12,
