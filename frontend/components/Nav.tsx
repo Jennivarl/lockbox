@@ -153,26 +153,15 @@ export default function Nav() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button onClick={login} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                    fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
-                    background: "transparent", color: "#000000",
-                    border: "1px solid rgba(0,0,0,0.3)", cursor: "pointer",
-                  }}>
-                    <LogIn style={{ width: 14, height: 14 }} /> Sign In
-                  </button>
-                  <button onClick={login} style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                    fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
-                    background: "#000000", color: "#FFFFFF",
-                    border: "1px solid #000000", cursor: "pointer",
-                  }}>
-                    <Plus style={{ width: 14, height: 14 }} /> New Vault
-                  </button>
-                </div>
+                <button onClick={login} style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                  fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
+                  background: "#000000", color: "#FFFFFF",
+                  border: "1px solid #000000", cursor: "pointer",
+                }}>
+                  <LogIn style={{ width: 14, height: 14 }} /> Sign In
+                </button>
               )}
             </div>
           )}

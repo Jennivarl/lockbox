@@ -1,14 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Timer, Users, Plus, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target } from "lucide-react";
+import { Timer, Users, PiggyBank, Dumbbell, Building2, Lock, ArrowLeft, Trophy, Target } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { ProgressBar } from "@/components/ProgressBar";
 import { api } from "@/lib/api";
-import { useAuth } from "@/lib/useAuth";
 import type { Vault } from "@/lib/types";
 
 const font = '"Space Mono", "Courier New", monospace';
@@ -143,17 +141,11 @@ const TYPE_FILTERS = ["all", "savings", "accountability", "dao", "vesting"] as c
 const STATUS_FILTERS = ["filling", "active", "completed", "dead"] as const;
 
 export default function VaultsPage() {
-  const router = useRouter();
-  const { authenticated, login } = useAuth();
   const [vaults,       setVaults]       = useState<Vault[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [typeFilter,   setTypeFilter]   = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const handleNewVault = () => {
-    if (authenticated) router.push("/vaults/new");
-    else login();
-  };
 
   useEffect(() => {
     api.vaults().then(v => { setVaults(v); setLoading(false); }).catch(() => setLoading(false));
@@ -189,14 +181,6 @@ export default function VaultsPage() {
               {open} open · {locked.toLocaleString()} RIAO at stake
             </p>
           </div>
-          <button onClick={handleNewVault} style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "10px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-            fontFamily: font, letterSpacing: "0.06em", textTransform: "uppercase",
-            background: "#000000", color: "#FFFFFF", border: "none", cursor: "pointer",
-          }}>
-            <Plus style={{ width: 15, height: 15 }} /> New Vault
-          </button>
         </div>
 
         {/* Type filters */}
