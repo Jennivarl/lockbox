@@ -28,7 +28,7 @@ const NAV_LINKS = [
 ];
 
 const MORE_LINKS = [
-  { href: "/shame", label: "Hall of Shame" },
+  { href: "/shame", label: "HOF" },
   { href: "/docs",  label: "Docs" },
 ];
 
@@ -86,10 +86,9 @@ export default function Nav() {
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
               {NAV_LINKS.map(({ href, label }) => (
                 <Link key={href} href={href} style={{
-                  fontFamily: font, fontSize: 14, fontWeight: 600, letterSpacing: "0.04em",
-                  color: isActive(href) ? "#000000" : "#222222",
-                  borderBottom: isActive(href) ? "2px solid #000000" : "2px solid transparent",
-                  paddingBottom: 2, transition: "all 0.15s", textDecoration: "none",
+                  fontFamily: font, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em",
+                  color: isActive(href) ? "#000000" : "#444444",
+                  textDecoration: "none",
                 }}>
                   {label}
                 </Link>
@@ -99,11 +98,9 @@ export default function Nav() {
               <div ref={moreRef} style={{ position: "relative" }}>
                 <button onClick={() => setMoreOpen(o => !o)} style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
-                  fontFamily: font, fontSize: 14, fontWeight: 600, letterSpacing: "0.04em",
-                  color: MORE_LINKS.some(l => isActive(l.href)) ? "#000000" : "#222222",
-                  paddingBottom: 2,
-                  borderBottom: MORE_LINKS.some(l => isActive(l.href)) ? "2px solid #000000" : "2px solid transparent",
-                  background: "none", border: "none", borderBottomStyle: "solid", cursor: "pointer",
+                  fontFamily: font, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em",
+                  color: MORE_LINKS.some(l => isActive(l.href)) ? "#000000" : "#444444",
+                  background: "none", border: "none", cursor: "pointer", padding: 0,
                 }}>
                   More <ChevronDown style={{ width: 13, height: 13, transition: "transform 0.15s", transform: moreOpen ? "rotate(180deg)" : "rotate(0)" }} />
                 </button>
