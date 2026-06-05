@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
 import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target, Send, Copy, CheckCheck, TrendingUp, Zap, DollarSign, Clock, Bell } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
@@ -304,6 +304,145 @@ function LockInModal({ vault, balance, onConfirm, onCancel, accentColor }: {
   );
 }
 
+function InviteSplash({ vault, meta, balance, onJoin, onLogin, onDismiss, authenticated }: {
+  vault: Vault; meta: { color: string; bg: string; label: string; icon: React.ElementType };
+  balance: number; onJoin: () => void; onLogin: () => void;
+  onDismiss: () => void; authenticated: boolean;
+}) {
+  const Icon        = meta.icon;
+  const active      = vault.members.filter(m => m.status === "active");
+  const slotsLeft   = vault.max_members - active.length;
+  const canAfford   = balance >= vault.buy_in;
+  const isFull      = slotsLeft <= 0;
+  const dl          = new Date(vault.deadline);
+  const daysLeft    = Math.max(0, Math.ceil((dl.getTime() - Date.now()) / 86_400_000));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 180,
+        background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "20px",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 24 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        style={{
+          background: "#FFFFFF", borderRadius: 22, width: "100%", maxWidth: 480,
+          overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.3)",
+          border: `2px solid ${meta.color}25`,
+        }}
+      >
+        {/* Coloured header band */}
+        <div style={{
+          background: `${meta.color}10`, borderBottom: `1px solid ${meta.color}20`,
+          padding: "24px 28px 20px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: `${meta.color}18`, border: `1.5px solid ${meta.color}30`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Icon style={{ width: 20, height: 20, color: meta.color }} strokeWidth={1.8} />
+            </div>
+            <div>
+              <div style={{ fontFamily: font, fontSize: 9, fontWeight: 700, letterSpacing: "0.12em",
+                textTransform: "uppercase", color: meta.color, marginBottom: 3 }}>
+                {meta.label} · You&apos;ve been invited
+              </div>
+              <h2 style={{ fontFamily: font, fontSize: 18, fontWeight: 900, color: "#000000",
+                letterSpacing: "-0.02em", margin: 0, lineHeight: 1.25 }}>
+                {vault.name}
+              </h2>
+            </div>
+          </div>
+          <p style={{ fontFamily: font, fontSize: 12, color: "#6B6B6B", lineHeight: 1.7, margin: 0 }}>
+            {vault.description}
+          </p>
+        </div>
+
+        {/* Stats row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+          {[
+            { label: "Lock in",    value: `${vault.buy_in.toLocaleString()}`, unit: "RIAO", color: meta.color },
+            { label: "Slots left", value: String(slotsLeft),                  unit: "open",  color: isFull ? "#DC2626" : "#2563EB" },
+            { label: "Deadline",   value: String(daysLeft),                   unit: "days",  color: daysLeft < 7 ? "#D97706" : "#6B6B6B" },
+            { label: "Penalty",    value: `${vault.penalty_pct}%`,            unit: "slash", color: "#DC2626" },
+          ].map((s, i) => (
+            <div key={i} style={{
+              padding: "16px 12px", textAlign: "center",
+              borderRight: i < 3 ? "1px solid rgba(0,0,0,0.07)" : "none",
+            }}>
+              <div style={{ fontFamily: font, fontSize: 18, fontWeight: 900, color: s.color,
+                letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 2 }}>
+                {s.value}
+              </div>
+              <div style={{ fontFamily: font, fontSize: 9, color: "#9B9B9B", letterSpacing: "0.06em",
+                textTransform: "uppercase" }}>
+                {s.unit}
+              </div>
+              <div style={{ fontFamily: font, fontSize: 9, color: "#BBBBBB", marginTop: 2 }}>
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA area */}
+        <div style={{ padding: "20px 28px 24px" }}>
+          {!canAfford && authenticated && (
+            <div style={{ borderRadius: 8, padding: "10px 14px", marginBottom: 14,
+              background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.18)",
+              fontFamily: font, fontSize: 12, color: "#DC2626" }}>
+              Your balance ({balance.toLocaleString()} RIAO) is below the {vault.buy_in.toLocaleString()} RIAO buy-in.
+            </div>
+          )}
+
+          {isFull ? (
+            <div style={{ borderRadius: 10, padding: "14px", marginBottom: 14, textAlign: "center",
+              background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)",
+              fontFamily: font, fontSize: 13, color: "#9B9B9B" }}>
+              This vault is full
+            </div>
+          ) : authenticated ? (
+            <button onClick={onJoin} disabled={!canAfford} style={{
+              width: "100%", padding: "15px 0", borderRadius: 12, marginBottom: 10,
+              fontFamily: font, fontSize: 14, fontWeight: 900, letterSpacing: "0.04em",
+              background: canAfford ? meta.color : "#CCCCCC", color: "#FFFFFF",
+              border: "none", cursor: canAfford ? "pointer" : "not-allowed",
+            }}>
+              Lock In — {vault.buy_in.toLocaleString()} RIAO
+            </button>
+          ) : (
+            <button onClick={onLogin} style={{
+              width: "100%", padding: "15px 0", borderRadius: 12, marginBottom: 10,
+              fontFamily: font, fontSize: 14, fontWeight: 900, letterSpacing: "0.04em",
+              background: "#000000", color: "#FFFFFF", border: "none", cursor: "pointer",
+            }}>
+              Sign in to Lock In
+            </button>
+          )}
+
+          <button onClick={onDismiss} style={{
+            width: "100%", padding: "11px 0", borderRadius: 10,
+            fontFamily: font, fontSize: 12, fontWeight: 700, color: "#9B9B9B",
+            background: "transparent", border: "1px solid rgba(0,0,0,0.1)", cursor: "pointer",
+          }}>
+            View full vault details
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function QuitConfirmModal({ vault, lockedAmount, effectivePenalty, remainingCount, accentColor, onConfirm, onCancel }: {
   vault: Vault; lockedAmount: number; effectivePenalty: number; remainingCount: number;
   accentColor: string; onConfirm: () => void; onCancel: () => void;
@@ -549,9 +688,10 @@ function PenaltyEscalatorChart({ vault, accentColor }: { vault: Vault; accentCol
   );
 }
 
-export default function VaultPage() {
+function VaultPageInner() {
   const { id }    = useParams<{ id: string }>();
   const router    = useRouter();
+  const params    = useSearchParams();
   const { authenticated, login, peerId, peerName } = useAuth();
   const { balance, deduct, add } = useBalance();
   const { profile } = useProfile();
@@ -565,6 +705,7 @@ export default function VaultPage() {
   const [quitMsg,     setQuitMsg]     = useState("");
   const [showConfirm,     setShowConfirm]     = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [showInvite,      setShowInvite]      = useState(() => params.get("join") === "1");
   const [messages,    setMessages]    = useState<Message[]>([]);
   const [chatInput,   setChatInput]   = useState("");
   const [copied,      setCopied]      = useState(false);
@@ -684,7 +825,8 @@ export default function VaultPage() {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    const base = window.location.origin + window.location.pathname;
+    navigator.clipboard.writeText(`${base}?join=1`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -721,6 +863,20 @@ export default function VaultPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#C2C8D4" }}>
+      <AnimatePresence>
+        {showInvite && vault && !isMember && (
+          <InviteSplash
+            vault={vault}
+            meta={meta}
+            balance={balance}
+            authenticated={authenticated}
+            onJoin={() => { setShowInvite(false); setShowConfirm(true); }}
+            onLogin={() => { setShowInvite(false); login(); }}
+            onDismiss={() => setShowInvite(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {showConfirm && vault && (
         <LockInModal
           vault={vault}
@@ -1071,6 +1227,20 @@ export default function VaultPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function VaultPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#C2C8D4" }}>
+        <div style={{ textAlign: "center", padding: "80px 0", fontFamily: '"Space Mono", monospace', color: "#9B9B9B" }}>
+          Loading…
+        </div>
+      </div>
+    }>
+      <VaultPageInner />
+    </Suspense>
   );
 }
 
