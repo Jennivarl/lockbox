@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target, Send, Copy, CheckCheck, TrendingUp } from "lucide-react";
+import { ArrowLeft, UserX, CheckCircle2, UserPlus, Check, X, PiggyBank, Dumbbell, Building2, Lock, FastForward, Trophy, Target, Send, Copy, CheckCheck, TrendingUp, Zap, DollarSign, Clock, Bell } from "lucide-react";
 import Nav from "@/components/Nav";
 import { Badge } from "@/components/Badge";
 import { Button } from "@/components/Button";
@@ -21,9 +21,12 @@ const STATUS_VARIANT: Record<string, "info" | "success" | "default" | "danger"> 
   filling: "info", active: "success", completed: "default", dead: "danger",
 };
 
-const EVENT_COLOR: Record<string, string> = {
-  notification: "#2563EB", announcement: "#7C3AED",
-  rage_quit: "#DC2626", payout: "#059669", warning: "#D97706",
+const EVENT_META: Record<string, { color: string; icon: React.ElementType; label: string }> = {
+  notification: { color: "#2563EB", icon: Bell,         label: "Event"     },
+  announcement: { color: "#7C3AED", icon: Zap,          label: "Rule fired" },
+  rage_quit:    { color: "#DC2626", icon: UserX,        label: "Rage quit" },
+  payout:       { color: "#059669", icon: DollarSign,   label: "Payout"    },
+  warning:      { color: "#D97706", icon: Clock,        label: "Warning"   },
 };
 
 const TYPE_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
@@ -101,21 +104,77 @@ function MemberRow({ m, canQuit, onQuit, peerId, accentColor }: {
   );
 }
 
-function EventPill({ ev, isNew }: { ev: ReactiveEvent; isNew: boolean }) {
-  const color = EVENT_COLOR[ev.event_type] ?? "#6B6B6B";
+function relativeTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60)  return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60)  return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function TimelineEntry({ ev, isNew, isLast }: { ev: ReactiveEvent; isNew: boolean; isLast: boolean }) {
+  const em = EVENT_META[ev.event_type] ?? EVENT_META.notification;
+  const Icon = em.icon;
   return (
-    <div style={{
-      display: "flex", gap: 12, alignItems: "flex-start",
-      padding: "12px 16px", borderBottom: "1px solid rgba(0,0,0,0.05)",
-      background: isNew ? "rgba(0,0,0,0.02)" : "transparent",
-      transition: "background 1s ease",
-    }}>
-      <div style={{ width: 7, height: 7, borderRadius: "50%", background: color, flexShrink: 0, marginTop: 5 }} />
-      <div style={{ flex: 1, fontFamily: font, fontSize: 12, color: "#374151", lineHeight: 1.5 }}>{ev.summary}</div>
-      <div style={{ fontFamily: font, fontSize: 10, color: "#9B9B9B", flexShrink: 0 }}>
-        {new Date(ev.fired_at).toLocaleTimeString()}
+    <motion.div
+      initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        display: "flex", gap: 14, alignItems: "flex-start",
+        padding: "14px 18px",
+        background: isNew ? `${em.color}06` : "transparent",
+        transition: "background 1.5s ease",
+        position: "relative",
+      }}
+    >
+      {/* Vertical connecting line */}
+      {!isLast && (
+        <div style={{
+          position: "absolute", left: 29, top: 42, bottom: 0,
+          width: 1, background: "rgba(0,0,0,0.07)",
+        }} />
+      )}
+
+      {/* Icon node */}
+      <div style={{
+        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+        background: `${em.color}12`, border: `1.5px solid ${em.color}30`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", zIndex: 1,
+      }}>
+        <Icon style={{ width: 13, height: 13, color: em.color }} strokeWidth={2} />
       </div>
-    </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
+          <span style={{
+            fontFamily: font, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: em.color,
+            padding: "2px 6px", borderRadius: 4, background: `${em.color}12`,
+          }}>
+            {em.label}
+          </span>
+          {ev.rule_name && ev.rule_name !== ev.event_type && (
+            <span style={{ fontFamily: "monospace", fontSize: 10, color: "#9B9B9B" }}>
+              {ev.rule_name}
+            </span>
+          )}
+        </div>
+        <div style={{ fontFamily: font, fontSize: 12, color: "#374151", lineHeight: 1.55 }}>
+          {ev.summary}
+        </div>
+      </div>
+
+      {/* Timestamp */}
+      <div style={{ fontFamily: font, fontSize: 10, color: "#BBBBBB", flexShrink: 0, marginTop: 1 }}
+        title={new Date(ev.fired_at).toLocaleString()}>
+        {relativeTime(ev.fired_at)}
+      </div>
+    </motion.div>
   );
 }
 
@@ -588,16 +647,43 @@ export default function VaultPage() {
 
           {/* RIGHT */}
           <div>
-            <div style={{ fontFamily: font, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9B9B9B", marginBottom: 12 }}>
-              Reactive Events
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ fontFamily: font, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9B9B9B" }}>
+                Vault Timeline
+              </div>
+              {events.length > 0 && (
+                <span style={{ fontFamily: font, fontSize: 10, color: "#BBBBBB" }}>
+                  {events.length} event{events.length !== 1 ? "s" : ""}
+                </span>
+              )}
             </div>
-            <div style={{ borderRadius: 14, border: "1px solid rgba(0,0,0,0.09)", background: "#FFFFFF", overflow: "hidden", maxHeight: 460, overflowY: "auto" }}>
+            <div style={{
+              borderRadius: 14, border: "1px solid rgba(0,0,0,0.09)",
+              background: "#FFFFFF", overflow: "hidden",
+              maxHeight: 480, overflowY: "auto",
+            }}>
               {events.length === 0 ? (
-                <div style={{ padding: 24, fontFamily: font, fontSize: 12, color: "#9B9B9B", textAlign: "center" }}>
-                  No events yet — join or quit to see rules fire.
+                <div style={{ padding: "32px 24px", textAlign: "center" }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, margin: "0 auto 12px",
+                    background: "rgba(0,0,0,0.04)", border: "1px dashed rgba(0,0,0,0.12)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Zap style={{ width: 16, height: 16, color: "#CCCCCC" }} />
+                  </div>
+                  <div style={{ fontFamily: font, fontSize: 12, color: "#BBBBBB", lineHeight: 1.6 }}>
+                    No events yet.<br />Join or quit to see rules fire.
+                  </div>
                 </div>
               ) : (
-                events.map(ev => <EventPill key={ev.id} ev={ev} isNew={newIds.has(ev.id)} />)
+                events.map((ev, i) => (
+                  <TimelineEntry
+                    key={ev.id}
+                    ev={ev}
+                    isNew={newIds.has(ev.id)}
+                    isLast={i === events.length - 1}
+                  />
+                ))
               )}
             </div>
 
