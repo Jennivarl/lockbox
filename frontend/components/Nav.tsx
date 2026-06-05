@@ -8,16 +8,19 @@ import { useProfile } from "@/lib/useProfile";
 import NotificationBell from "@/components/NotificationBell";
 
 const font = '"Space Mono", "Courier New", monospace';
-function NavAvatar({ name, color }: { name: string; color: string }) {
+function NavAvatar({ name, color, image }: { name: string; color: string; image?: string }) {
   const initials = name.split(/[\s@._\-]+/).map(w => w[0]?.toUpperCase() ?? "").slice(0, 2).join("") || "?";
   return (
     <div style={{
-      width: 34, height: 34, borderRadius: 9, background: color || "#059669",
-      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      width: 34, height: 34, borderRadius: 9,
+      background: image ? "transparent" : (color || "#059669"),
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, overflow: "hidden",
     }}>
-      <span style={{ fontFamily: font, fontSize: 12, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.01em" }}>
-        {initials}
-      </span>
+      {image
+        ? <img src={image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        : <span style={{ fontFamily: font, fontSize: 12, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.01em" }}>{initials}</span>
+      }
     </div>
   );
 }
@@ -86,7 +89,7 @@ export default function Nav() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <NotificationBell peerId={peerId} />
                   <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-                    <NavAvatar name={displayName} color={profile.avatarColor} />
+                    <NavAvatar name={displayName} color={profile.avatarColor} image={profile.avatarImage} />
                   </Link>
                   <button onClick={logout} style={{
                     display: "inline-flex", alignItems: "center",
@@ -160,7 +163,7 @@ export default function Nav() {
                   display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 10,
                   background: "rgba(0,0,0,0.05)", textDecoration: "none",
                 }}>
-                  <NavAvatar name={displayName} color={profile.avatarColor} />
+                  <NavAvatar name={displayName} color={profile.avatarColor} image={profile.avatarImage} />
                   <span style={{ fontFamily: font, fontSize: 13, color: "#000000", fontWeight: 600 }}>
                     {displayName}
                   </span>

@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { ArrowLeft, Save, CheckCircle2, PiggyBank, Dumbbell, Building2, Lock } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle2, PiggyBank, Dumbbell, Building2, Lock, Camera } from "lucide-react";
 import Nav from "@/components/Nav";
 import { useAuth } from "@/lib/useAuth";
 import { useBalance } from "@/lib/useBalance";
@@ -20,21 +20,31 @@ const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
   vesting:        { icon: Lock,      color: "#D97706" },
 };
 
-function BigAvatar({ name, color }: { name: string; color: string }) {
-  const initials = name
-    .split(/[\s@._\-]+/)
-    .map(w => w[0]?.toUpperCase() ?? "")
-    .slice(0, 2)
-    .join("") || "?";
+function BigAvatar({ name, color, image, onClick }: { name: string; color: string; image?: string; onClick?: () => void }) {
+  const initials = name.split(/[\s@._\-]+/).map(w => w[0]?.toUpperCase() ?? "").slice(0, 2).join("") || "?";
   return (
-    <div style={{
+    <div onClick={onClick} style={{
       width: 88, height: 88, borderRadius: 22,
-      background: color, flexShrink: 0,
+      background: image ? "transparent" : color, flexShrink: 0,
       display: "flex", alignItems: "center", justifyContent: "center",
+      cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden",
     }}>
-      <span style={{ fontFamily: font, fontSize: 28, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.02em" }}>
-        {initials}
-      </span>
+      {image
+        ? <img src={image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 22 }} />
+        : <span style={{ fontFamily: font, fontSize: 28, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.02em" }}>{initials}</span>
+      }
+      {onClick && (
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: 22,
+          background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center",
+          opacity: 0, transition: "opacity 0.15s",
+        }}
+          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = "0"; }}
+        >
+          <Camera style={{ width: 22, height: 22, color: "#FFFFFF" }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -48,14 +58,17 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0]);
+  const [avatarImage, setAvatarImage] = useState<string | undefined>(undefined);
   const [saved, setSaved] = useState(false);
   const [vaults, setVaults] = useState<Vault[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loaded) return;
     setDisplayName(profile.displayName || peerName);
     setBio(profile.bio);
     setAvatarColor(profile.avatarColor);
+    if (profile.avatarImage) setAvatarImage(profile.avatarImage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]); // intentionally only on mount — peerName changes must not overwrite edits
 
@@ -77,8 +90,21 @@ export default function ProfilePage() {
     .reduce((s, m) => s + m.amount_locked, 0);
 
   const handleSave = () => {
-    save({ displayName, bio, avatarColor });
+    save({ displayName, bio, avatarColor, avatarImage });
     setSaved(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setAvatarImage(dataUrl);
+      save({ avatarImage: dataUrl });
+      setSaved(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const label = displayName || peerName;
@@ -122,9 +148,12 @@ export default function ProfilePage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
               style={{ borderRadius: 16, padding: 28, background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.09)" }}>
 
+              {/* Hidden file input */}
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
+
               {/* Preview */}
               <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28 }}>
-                <BigAvatar name={label} color={avatarColor} />
+                <BigAvatar name={label} color={avatarColor} image={avatarImage} onClick={() => fileRef.current?.click()} />
                 <div>
                   <div style={{ fontFamily: font, fontSize: 22, fontWeight: 900, color: "#000000", letterSpacing: "-0.02em" }}>
                     {label}

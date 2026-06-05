@@ -5,6 +5,7 @@ export interface Profile {
   displayName: string;
   bio: string;
   avatarColor: string;
+  avatarImage?: string; // base64 data URL
 }
 
 export const AVATAR_COLORS = [
