@@ -20,29 +20,34 @@ const TYPE_META: Record<string, { icon: React.ElementType; color: string }> = {
   vesting:        { icon: Lock,      color: "#D97706" },
 };
 
-function BigAvatar({ name, color, image, onClick }: { name: string; color: string; image?: string; onClick?: () => void }) {
-  const initials = name.split(/[\s@._\-]+/).map(w => w[0]?.toUpperCase() ?? "").slice(0, 2).join("") || "?";
+function BigAvatar({ image, onClick }: { image?: string; onClick?: () => void }) {
   return (
     <div onClick={onClick} style={{
-      width: 88, height: 88, borderRadius: 22,
-      background: image ? "transparent" : color, flexShrink: 0,
+      width: 88, height: 88, borderRadius: 22, flexShrink: 0,
+      background: image ? "transparent" : "#E2E5EA",
+      border: image ? "none" : "1.5px dashed rgba(0,0,0,0.15)",
       display: "flex", alignItems: "center", justifyContent: "center",
       cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden",
     }}>
       {image
         ? <img src={image} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 22 }} />
-        : <span style={{ fontFamily: font, fontSize: 28, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.02em" }}>{initials}</span>
+        : (
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        )
       }
       {onClick && (
         <div style={{
           position: "absolute", inset: 0, borderRadius: 22,
-          background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center",
           opacity: 0, transition: "opacity 0.15s",
         }}
           onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = "0"; }}
         >
-          <Camera style={{ width: 22, height: 22, color: "#FFFFFF" }} />
+          <Camera style={{ width: 20, height: 20, color: "#FFFFFF" }} />
         </div>
       )}
     </div>
@@ -153,7 +158,7 @@ export default function ProfilePage() {
 
               {/* Preview */}
               <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28 }}>
-                <BigAvatar name={label} color={avatarColor} image={avatarImage} onClick={() => fileRef.current?.click()} />
+                <BigAvatar image={avatarImage} onClick={() => fileRef.current?.click()} />
                 <div>
                   <div style={{ fontFamily: font, fontSize: 22, fontWeight: 900, color: "#000000", letterSpacing: "-0.02em" }}>
                     {label}
@@ -212,24 +217,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div style={{ marginBottom: 26 }}>
-                <label style={{ display: "block", fontFamily: font, fontSize: 11, color: "#6B6B6B", marginBottom: 10, letterSpacing: "0.04em" }}>
-                  Avatar Color
-                </label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {AVATAR_COLORS.map(c => (
-                    <button key={c} onClick={() => { setAvatarColor(c); setSaved(false); }} style={{
-                      width: 34, height: 34, borderRadius: 9, background: c,
-                      border: avatarColor === c ? "3px solid #000000" : "3px solid transparent",
-                      outline: avatarColor === c ? "2px solid rgba(0,0,0,0.15)" : "none",
-                      outlineOffset: 1,
-                      cursor: "pointer",
-                      transform: avatarColor === c ? "scale(1.12)" : "scale(1)",
-                      transition: "transform 0.12s",
-                    }} />
-                  ))}
-                </div>
-              </div>
 
               <button onClick={handleSave} style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
