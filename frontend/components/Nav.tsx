@@ -31,6 +31,7 @@ function NavAvatar({ image }: { image?: string }) {
 
 const NAV_LINKS = [
   { href: "/vaults",      label: "Vaults" },
+  { href: "/feed",        label: "Feed" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/shame",       label: "HOF" },
   { href: "/docs",        label: "Docs" },
