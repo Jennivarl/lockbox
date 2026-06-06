@@ -518,14 +518,19 @@ export default function NewVault() {
 
   const [step,       setStep]       = useState(0);
   const [direction,  setDirection]  = useState(1);
-  const [type,       setType]       = useState("savings");
-  const [name,       setName]       = useState("");
-  const [desc,       setDesc]       = useState("");
+  const [type,       setType]       = useState("accountability");
+  const [name,       setName]       = useState("30-Day Builder Sprint");
+  const [desc,       setDesc]       = useState("A group accountability pact for building in public. Lock funds for 30 days — anyone who walks away early forfeits their penalty to everyone who stayed.");
   const [buyIn,      setBuyIn]      = useState("1000");
   const [maxMembers, setMaxMembers] = useState("4");
   const [penaltyPct, setPenaltyPct] = useState("20");
   const [minLock,    setMinLock]    = useState("48");
-  const [deadline,   setDeadline]   = useState("");
+  const [deadline,   setDeadline]   = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    d.setHours(12, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState("");
 
