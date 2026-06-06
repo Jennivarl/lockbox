@@ -352,40 +352,50 @@ function Step3({ type, buyIn, maxMembers, penaltyPct, minLock, deadline,
       </div>
 
       {/* Penalty preview */}
-      {buy > 0 && pct > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
-          style={{
-            marginTop: 16, borderRadius: 10, padding: "14px 16px",
-            background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.15)",
-          }}>
-          <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
-            textTransform: "uppercase", color: "#DC2626", marginBottom: 8 }}>
-            Penalty preview
-          </div>
-          <div style={{ display: "flex", gap: 20 }}>
-            <div>
-              <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>If quit at day 0</div>
-              <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: "#DC2626" }}>
-                −{Math.round(buy * pct / 100).toLocaleString()} RIAO
+      {buy > 0 && pct > 0 && (() => {
+        const minLockHrs = parseInt(minLock) || 0;
+        const dlMs = deadline ? new Date(deadline).getTime() - Date.now() : 0;
+        const totalHrs = dlMs > 0 ? dlMs / 3_600_000 : 0;
+        const earliestRatio = totalHrs > 0 ? Math.min(minLockHrs / totalHrs, 1) : 0;
+        const earliestPct = Math.min(Math.round(pct * (1 + earliestRatio)), 95);
+        const earliestLabel = minLockHrs > 0 ? `Earliest quit (after ${minLockHrs}h lock)` : "If quit at day 0";
+        return (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}
+            style={{
+              marginTop: 16, borderRadius: 10, padding: "14px 16px",
+              background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.15)",
+            }}>
+            <div style={{ fontFamily: font, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+              textTransform: "uppercase", color: "#DC2626", marginBottom: 8 }}>
+              Penalty preview
+            </div>
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>{earliestLabel}</div>
+                <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: "#DC2626" }}>
+                  −{Math.round(buy * earliestPct / 100).toLocaleString()} RIAO
+                </div>
+                <div style={{ fontFamily: font, fontSize: 9, color: "#9B9B9B", marginTop: 2 }}>{earliestPct}% penalty</div>
+              </div>
+              <div style={{ width: 1, background: "rgba(220,38,38,0.15)" }} />
+              <div>
+                <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>If quit at deadline</div>
+                <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: "#DC2626" }}>
+                  −{Math.round(buy * maxPct / 100).toLocaleString()} RIAO
+                </div>
+                <div style={{ fontFamily: font, fontSize: 9, color: "#9B9B9B", marginTop: 2 }}>{maxPct}% penalty</div>
+              </div>
+              <div style={{ width: 1, background: "rgba(220,38,38,0.15)" }} />
+              <div>
+                <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>Pot if full ({maxMembers || "?"} members)</div>
+                <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: t?.color }}>
+                  {(buy * (parseInt(maxMembers) || 0)).toLocaleString()} RIAO
+                </div>
               </div>
             </div>
-            <div style={{ width: 1, background: "rgba(220,38,38,0.15)" }} />
-            <div>
-              <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>If quit at deadline</div>
-              <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: "#DC2626" }}>
-                −{Math.round(buy * maxPct / 100).toLocaleString()} RIAO
-              </div>
-            </div>
-            <div style={{ width: 1, background: "rgba(220,38,38,0.15)" }} />
-            <div>
-              <div style={{ fontFamily: font, fontSize: 11, color: "#6B6B6B" }}>Pot if full ({maxMembers} members)</div>
-              <div style={{ fontFamily: font, fontSize: 16, fontWeight: 900, color: t?.color }}>
-                {(buy * (parseInt(maxMembers) || 0)).toLocaleString()} RIAO
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        );
+      })()}
 
       <NavButtons onBack={onBack} onNext={onNext} nextDisabled={!canNext} />
     </div>
