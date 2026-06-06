@@ -698,6 +698,7 @@ function VaultPageInner() {
   const displayName = profile.displayName || peerName;
 
   const [vault,       setVault]       = useState<Vault | null>(null);
+  const [notFound,    setNotFound]    = useState(false);
   const [events,      setEvents]      = useState<ReactiveEvent[]>([]);
   const [requests,    setRequests]    = useState<Invite[]>([]);
   const [newIds,      setNewIds]      = useState<Set<string>>(new Set());
@@ -713,13 +714,17 @@ function VaultPageInner() {
   const prevIds = useRef<Set<string>>(new Set());
 
   const load = async () => {
-    const [v, evs] = await Promise.all([api.vault(id), api.feed(20)]);
-    setVault(v);
-    const fresh = new Set(evs.map(e => e.id).filter(eid => !prevIds.current.has(eid)));
-    if (fresh.size > 0) setNewIds(fresh);
-    prevIds.current = new Set(evs.map(e => e.id));
-    setEvents(evs.filter(e => { const p = e.payload as Record<string, unknown>; return p.vault_id === id; }));
-    setTimeout(() => setNewIds(new Set()), 2500);
+    try {
+      const [v, evs] = await Promise.all([api.vault(id), api.feed(20)]);
+      setVault(v);
+      const fresh = new Set(evs.map(e => e.id).filter(eid => !prevIds.current.has(eid)));
+      if (fresh.size > 0) setNewIds(fresh);
+      prevIds.current = new Set(evs.map(e => e.id));
+      setEvents(evs.filter(e => { const p = e.payload as Record<string, unknown>; return p.vault_id === id; }));
+      setTimeout(() => setNewIds(new Set()), 2500);
+    } catch {
+      setNotFound(true);
+    }
   };
 
   const loadRequests = async () => {
@@ -746,6 +751,22 @@ function VaultPageInner() {
       return () => clearInterval(t);
     }
   }, [vault?.id, authenticated, peerId]);
+
+  if (notFound) return (
+    <div style={{ minHeight: "100vh", background: "#C2C8D4" }}>
+      <Nav />
+      <div style={{ maxWidth: 480, margin: "100px auto", textAlign: "center", padding: "0 32px" }}>
+        <div style={{ fontFamily: font, fontSize: 48, fontWeight: 900, color: "#000000", marginBottom: 12 }}>404</div>
+        <div style={{ fontFamily: font, fontSize: 16, fontWeight: 700, color: "#000000", marginBottom: 8 }}>Vault not found</div>
+        <p style={{ fontFamily: font, fontSize: 13, color: "#6B6B6B", marginBottom: 28, lineHeight: 1.7 }}>
+          This vault doesn&apos;t exist or may have been removed.
+        </p>
+        <Link href="/vaults" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", borderRadius: 9, background: "#000000", color: "#FFFFFF", fontFamily: font, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
+          ← Browse vaults
+        </Link>
+      </div>
+    </div>
+  );
 
   if (!vault) return (
     <div style={{ minHeight: "100vh", background: "#C2C8D4" }}>
