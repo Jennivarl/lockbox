@@ -29,11 +29,11 @@ const EVENT_META: Record<string, { color: string; icon: React.ElementType; label
   warning:      { color: "#D97706", icon: Clock,        label: "Warning"   },
 };
 
-const TYPE_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
-  savings:        { icon: PiggyBank, color: "#059669", bg: "rgba(5,150,105,0.07)"  },
-  accountability: { icon: Target,    color: "#7C3AED", bg: "rgba(124,58,237,0.07)" },
-  dao:            { icon: Building2, color: "#2563EB", bg: "rgba(37,99,235,0.07)"  },
-  vesting:        { icon: Lock,      color: "#D97706", bg: "rgba(217,119,6,0.07)"  },
+const TYPE_META: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
+  savings:        { icon: PiggyBank, color: "#059669", bg: "rgba(5,150,105,0.07)",  label: "Savings"        },
+  accountability: { icon: Target,    color: "#7C3AED", bg: "rgba(124,58,237,0.07)", label: "Accountability" },
+  dao:            { icon: Building2, color: "#2563EB", bg: "rgba(37,99,235,0.07)",  label: "DAO"            },
+  vesting:        { icon: Lock,      color: "#D97706", bg: "rgba(217,119,6,0.07)",  label: "Vesting"        },
 };
 
 function getVaultIcon(name: string, type: string): React.ElementType {

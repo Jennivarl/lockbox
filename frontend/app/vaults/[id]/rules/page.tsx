@@ -205,7 +205,7 @@ export default function VaultRulesPage() {
                 </h1>
               </div>
             </div>
-            <Badge variant={{ filling: "info", active: "success", completed: "default", dead: "danger" }[vault.status] ?? "default"}>
+            <Badge variant={({ filling: "info", active: "success", completed: "default", dead: "danger" } as Record<string, "default" | "success" | "warning" | "info" | "danger">)[vault.status] ?? "default"}>
               {vault.status}
             </Badge>
           </div>
