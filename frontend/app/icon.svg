@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#000000"/>
+  <!-- lucide Vault v1.17.0 — exact icon nodes, 24×24 viewbox scaled to 20×20 centred in 32×32 -->
+  <g transform="translate(4,4) scale(0.833)" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="18" height="18" x="3" y="3" rx="2" fill="none"/>
+    <circle cx="7.5"  cy="7.5"  r="0.5" fill="white"/>
+    <path d="m7.9 7.9 2.7 2.7"/>
+    <circle cx="16.5" cy="7.5"  r="0.5" fill="white"/>
+    <path d="m13.4 10.6 2.7-2.7"/>
+    <circle cx="7.5"  cy="16.5" r="0.5" fill="white"/>
+    <path d="m7.9 16.1 2.7-2.7"/>
+    <circle cx="16.5" cy="16.5" r="0.5" fill="white"/>
+    <path d="m13.4 13.4 2.7 2.7"/>
+    <circle cx="12" cy="12" r="2" fill="none"/>
+  </g>
+</svg>
